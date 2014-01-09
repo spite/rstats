@@ -255,10 +255,8 @@ function onMouseDown( event ) {
     
 }
 
-var mouseOps = 0;
 function onMouseMove( event ) {
 
-    mouseOps++;
     if ( isUserInteracting ) {
     
         nlon = ( event.clientX - onPointerDownPointerX ) * 0.1 + onPointerDownLon;
@@ -395,7 +393,6 @@ function render() {
     rS( 'memory.used' ).set( performance.memory.usedJSHeapSize );
     rS( 'memory.total' ).set( performance.memory.totalJSHeapSize );*/
 
-    rS( 'mouse' ).set( mouseOps );
     rS( 'rStats' ).start();
     rS().update();
     rS( 'rStats' ).end();
