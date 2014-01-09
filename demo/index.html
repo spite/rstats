@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>rStats test</title>
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        
+        <meta property="og:url" content="http://www.clicktorelease.com/code/spherical-normal-mapping"/>
+        <meta property="og:title" content="Spherical Environment Mapping (MatCap/LitSphere)"/> 
+        <meta property="og:description" content=""/> 
+        <meta property="og:image" content="http://www.clicktorelease.com/code/spherical-normal-mapping/thumb.jpg"/> 
+        <meta name="description" content="">
+        <meta itemprop="name" content="Spherical Environment Mapping (MatCap/LitSphere)">
+        <meta itemprop="description" content="">
+        <meta itemprop="image" content="http://www.clicktorelease.com/code/spherical-normal-mapping/thumb.jpg">
+
+        <style>
+            *{ box-sizing: border-box; -moz-box-sizing: border-box; margin: 0; padding: 0 }
+            body {
+                color: #ddd;
+                font-family: 'Roboto Condensed', tahoma, sans-serif; font-weight: 100;
+                font-size:13px;
+                background-color: #222;
+                margin: 0px;
+                overflow: hidden;
+                line-height: 1.4em;
+            }
+            a{ color: #ec6e11; font-weight: bold; text-decoration: none; border-bottom: 1px solid rgba( 236, 110, 17, .2 ); -webkit-transition: color 150ms ease-out, border-color 150ms ease-out; transition: color 150ms ease-out, border-color 150ms ease-out; }
+            a:hover{ color: #fff; border-bottom: 1px solid rgba( 255,255,255, .2 );}
+            #container{ position: absolute; left: 0; top: 0; width: 100%; height: 100%; bottom: 0; background-color: #222; }
+            #options{ position: absolute; right: 0; top: 10px; width: 34em; }
+            #options ul{ list-style-type: none; margin-bottom: .5em; display: inline-block;}
+            #options li{ float: left; margin-right: 4px;}
+            h1{ font-weight: 400; font-size: 16px; margin-bottom: .5em; color: #eee;}
+            p{ margin-bottom: .5em;}
+            b{ font-weight: inherit; color: #ec6e11;}
+            #options div{ float: left;}
+            #title{ position: absolute; left: 10px; top: 10px;}
+            .o{ clear: both; width: 100%; position: relative; }
+            .o p{ position: absolute; right: 10px; top: 0;}
+            .o span{ width: 3em; text-align: right; display: inline-block;}
+            .ui{ pointer-events: auto; opacity: 1; -webkit-transition: opacity 150ms ease-out; transition: opacity 150ms ease-out;}
+            .hidden{ opacity: 0; pointer-events: none;}
+            .button{ padding: .5em 1em; background-color: #ec6e11; border: 1px solid #a64b14; outline: none; border-radius: 4px; color: #fff; font-weight: normal; -webkit-transition: background-color 150ms ease-out; text-shadow: 0 -1px 0 rgba( 70, 31, 8, .5 ); height: 0; line-height: 2.5em; }
+            .button:hover, .button.active{ text-decoration: none; border: 1px solid #a64b14; background-color: #f88c3c;}
+            input[type='checkbox'] + label:before { display: inline-block; width: 1em; color: #666; font-weight: bold; content:"✓"; }
+            input[type='checkbox']:checked + label:before { color: #ec6e11; content:"✓"; }
+            input[type='checkbox'] { display:none; }
+
+            @media (max-width: 880px) {
+                #title{ left: 10px; right: 10px;}
+                #title p{ display: none; }
+                #title h1{ width: 100%; text-align: center;}
+                #options{ top: auto; bottom: 10px; left: 50%; width: 34em; margin-left: -17em;}
+            }
+
+            @media (max-width: 500px) {
+                #options{ top: auto; bottom: 10px; left: 50%; margin-left: -9em; width: 18em;}
+                .o p b{ display: none;}
+            }
+
+        </style>
+        <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' rel='stylesheet' type='text/css'>
+    </head>
+    <body>
+        <div id="container" ></div>
+       
+        </div>
+
+<script src="three.min.js"></script>
+<script src="../src/rStats.js"></script>
+<script src="../src/rStats.extras.js"></script>
+
+<script>
+
+'use strict';
+
+
+
+var rS, glS, tS;
+
+//var rS = new rStats();
+
+var renderer, scene, camera, mesh, fov = 120, nfov = 70,
+container = document.getElementById( 'container' ),
+material, material2,
+onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+lon = 90, nlon = 110, onMouseDownLon = 0,
+lat = 0, nlat = 17, onMouseDownLat = 0,
+phi = 0, theta = 0,
+isUserInteracting = false, isUserPinching = false,
+onPointerDownPointerX, onPointerDownPointerY, onPointerDownLon, onPointerDownLat;
+var perPixelMode = false, currentMaterial;
+var uiElements = Array.prototype.slice.call( document.querySelectorAll( '.ui' ) );
+
+window.addEventListener( 'load', init );
+
+/*
+var c = document.body;
+document.getElementById( 'fullscreenBtn' ).addEventListener( 'click', function( e ) {
+    c.onwebkitfullscreenchange = function(e) {
+        c.onwebkitfullscreenchange = function() {
+        };
+    };
+    c.onmozfullscreenchange = function(e) {
+        c.onmozfullscreenchange = function() {
+        };
+    };
+    if( c.webkitRequestFullScreen ) c.webkitRequestFullScreen();
+    if( c.mozRequestFullScreen ) c.mozRequestFullScreen();
+    e.preventDefault();
+}, false );
+*/
+
+var mat, canvas, ctx;
+
+function init() {
+    
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera( fov, window.innerWidth / window.innerHeight, 10, 1000 );
+    camera.position.z = 100;
+
+    scene.add( camera );
+
+    renderer = new THREE.WebGLRenderer( { antialias: true } );
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+    container.appendChild( renderer.domElement );
+
+    container.addEventListener( 'mousedown', onMouseDown, false );
+    container.addEventListener( 'mousemove', onMouseMove, false );
+    container.addEventListener( 'mouseup', onMouseUp, false );
+    container.addEventListener( 'mousewheel', onMouseWheel, false );
+    container.addEventListener( 'DOMMouseScroll', onMouseWheel, false);
+    container.addEventListener( 'touchstart', onTouchStart, false );
+    container.addEventListener( 'touchmove', onTouchMove, false );
+    container.addEventListener( 'touchend', onTouchEnd, false );
+    container.addEventListener( 'touchcancel', onTouchEnd, false );
+
+    window.addEventListener( 'resize', onWindowResize, false );
+
+    onWindowResize();
+
+    canvas = document.createElement( 'canvas' );
+    canvas.width = 512;
+    canvas.height = 512;
+    ctx = canvas.getContext( '2d' );
+
+    var texture = new THREE.Texture( canvas );
+//    mat = new THREE.MeshNormalMaterial( { wireframe: false } );
+    mat = new THREE.MeshBasicMaterial( { map: texture } );
+
+    function r( d ){
+        return ( .5 - Math.random() ) * d;
+    }
+
+    var num = 500;
+    var g = new THREE.CubeGeometry( 1, 1, 1 );
+    for( var j = 0; j < num; j++ ) {
+        var m = new THREE.Mesh( g, mat );
+        m.position.set( r( 100 ), r( 100 ), r( 100 ) );
+        m.rotation.set( r( 2 * Math.PI ), r( 2 * Math.PI ), r( 2 * Math.PI ) );
+        m.scale.set( 1 + r( 1 ), 1 + r( 1 ), 1 + r( 1 ) );
+        scene.add( m );
+    }
+
+    var num = 500;
+    var geometry = new THREE.Geometry();
+    for( var j = 0; j < num; j++ ) {
+        var v = new THREE.Vector3( 0, 0, 0 );
+        v.set( r( 100 ), r( 100 ), r( 100 ) );
+        geometry.vertices.push( v );
+    }
+
+    var sprite = THREE.ImageUtils.loadTexture( 'disc.png' );
+
+    var material = new THREE.ParticleSystemMaterial( { size: 3, sizeAttenuation: true, map: sprite, transparent: true } );
+    material.color.setHSL( 1.0, 0.3, 0.7 );
+
+    var particles = new THREE.ParticleSystem( geometry, material );
+    particles.sortParticles = true;
+    scene.add( particles );
+
+    glS = new glStats();
+    tS = new threeStats( renderer );
+
+    rS = new rStats( {
+        values: {
+            frame: { caption: 'Total frame time (ms)', over: 16 },
+            fps: { caption: 'Framerate (FPS)', below: 30 },
+            calls: { caption: 'Calls (three.js)', over: 3000 },
+            raf: { caption: 'Time since last rAF (ms)' },
+            rstats: { caption: 'rStats update (ms)' }
+        },
+        groups: [
+            { caption: 'Framerate', values: [ 'fps', 'raf' ] },
+            { caption: 'Frame Budget', values: [ 'frame', 'texture', 'setup', 'render' ] }
+        ],
+        fractions: [
+            { base: 'frame', steps: [ 'texture', 'setup', 'render' ] }
+        ],
+        plugins: [
+            tS,
+            glS
+        ]
+    } );
+
+    render();
+    
+}
+
+function onWindowResize() {
+    var s = 1;
+    renderer.setSize( s * window.innerWidth, s * window.innerHeight );
+    camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
+}
+
+function onMouseWheel( event ) {
+
+    // WebKit
+
+    if ( event.wheelDeltaY ) {
+
+        nfov -= event.wheelDeltaY * 0.01;
+
+    // Opera / Explorer 9
+
+    } else if ( event.wheelDelta ) {
+
+        nfov -= event.wheelDelta * 0.05;
+
+    // Firefox
+
+    } else if ( event.detail ) {
+
+        nfov += event.detail * 1.0;
+
+    }
+    
+}
+
+function onMouseDown( event ) {
+
+    uiElements.forEach( function( e ) { e.classList.add( 'hidden' ); } );
+    event.preventDefault();
+
+    isUserInteracting = true;
+
+    onPointerDownPointerX = event.clientX;
+    onPointerDownPointerY = event.clientY;
+
+    onPointerDownLon = lon;
+    onPointerDownLat = lat;
+    
+}
+
+var mouseOps = 0;
+function onMouseMove( event ) {
+
+    mouseOps++;
+    if ( isUserInteracting ) {
+    
+        nlon = ( event.clientX - onPointerDownPointerX ) * 0.1 + onPointerDownLon;
+        nlat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
+        
+    }
+
+}
+
+function onMouseUp( event ) {
+    
+    uiElements.forEach( function( e ) { e.classList.remove( 'hidden' ); } );
+    isUserInteracting = false;
+    
+}
+
+var oDist = 0, oFov;
+
+function onTouchStart( event ) {
+
+    uiElements.forEach( function( e ) { e.classList.add( 'hidden' ); } );
+
+    event.preventDefault();
+
+    if( event.touches.length == 2 ) {
+
+        var t = event.touches;
+        oDist = Math.sqrt(
+                Math.pow( t[ 0 ].clientX - t[ 1 ].clientX, 2 ) +
+                Math.pow( t[ 0 ].clientY - t[ 1 ].clientY, 2 ) );
+        oFov = nfov;
+        
+        isUserPinching = true;
+
+    } else {
+
+        var t = event.touches[ 0 ];
+        isUserInteracting = true;
+
+        onPointerDownPointerX = t.clientX;
+        onPointerDownPointerY = t.clientY;
+
+        onPointerDownLon = lon;
+        onPointerDownLat = lat;
+    
+    }
+
+}
+
+function onTouchMove( event ) {
+
+    if( event.touches.length == 2 ) {
+
+        var t = event.touches;
+        var dist = Math.sqrt(
+                Math.pow( t[ 0 ].clientX - t[ 1 ].clientX, 2 ) +
+                Math.pow( t[ 0 ].clientY - t[ 1 ].clientY, 2 ) );
+
+        nfov = oFov + .1 * ( oDist - dist );
+
+    } else {
+
+        var t = event.touches[ 0 ];
+        nlon = ( t.clientX - onPointerDownPointerX ) * 0.1 + onPointerDownLon;
+        nlat = ( t.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
+
+    }
+
+}
+
+function onTouchEnd( event ) {
+
+    uiElements.forEach( function( e ) { e.classList.remove( 'hidden' ); } );
+
+    isUserInteracting = false;
+    isUserPinching = false;
+    
+}
+
+var perfTime, prevPerfTime = performance.now();
+var startTime = Date.now();
+
+function render() {
+
+    rS( 'frame' ).start();
+    glS.start();
+    
+    rS( 'rAF' ).tick();
+    rS( 'FPS' ).frame();
+
+    rS( 'texture' ).start();
+    var m = 10;// + 3000 * Math.sin( .001 * Date.now() );
+    for( var j = 0; j < m; j++ ) {
+        ctx.fillStyle = '#'+Math.floor(Math.random()*16777215).toString(16);
+        var x = Math.random() * canvas.width,
+            y = Math.random() * canvas.height,
+            w = Math.random() * canvas.width,
+            h = Math.random() * canvas.height;
+        ctx.fillRect( x, y, w, h );
+    }
+    mat.map.needsUpdate = true;
+    rS( 'texture' ).end();
+
+    rS( 'setup' ).start();
+
+    if( nfov < 1 ) nfov = 1;
+    if( nfov > 150 ) nfov = 150;
+
+    lon += ( nlon - lon ) * .2;
+    lat += ( nlat - lat ) * .2;
+    fov += ( nfov - fov ) * .2;
+
+    camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
+   
+    lat = Math.max( - 85, Math.min( 85, lat ) );
+    phi = ( 90 - lat ) * Math.PI / 180;
+    theta = lon * Math.PI / 180;
+
+    camera.position.x = 100 * Math.sin( phi ) * Math.cos( theta );
+    camera.position.y = 100 * Math.cos( phi );
+    camera.position.z = 100 * Math.sin( phi ) * Math.sin( theta );
+
+    camera.lookAt( scene.position );
+  
+    rS( 'setup' ).end();
+  
+    rS( 'render' ).start();
+    renderer.render( scene, camera );
+    rS( 'render' ).end();
+
+    rS( 'frame' ).end();
+
+    /*rS( 'memory.limit' ).set( performance.memory.jsHeapSizeLimit );
+    rS( 'memory.used' ).set( performance.memory.usedJSHeapSize );
+    rS( 'memory.total' ).set( performance.memory.totalJSHeapSize );*/
+
+    rS( 'mouse' ).set( mouseOps );
+    rS( 'rStats' ).start();
+    rS().update();
+    rS( 'rStats' ).end();
+
+    requestAnimationFrame( render );
+
+}
+
+</script>
+
+    </body>
+</html>
