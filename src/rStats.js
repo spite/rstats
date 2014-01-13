@@ -1,27 +1,27 @@
 // performance.now() polyfill from https://gist.github.com/paulirish/5438650
 
 (function(){
- 
+
   // prepare base perf object
   if (typeof window.performance === 'undefined') {
       window.performance = {};
   }
- 
+
   if (!window.performance.now){
-    
+
     var nowOffset = Date.now();
- 
+
     if (performance.timing && performance.timing.navigationStart){
       nowOffset = performance.timing.navigationStart
     }
- 
- 
+
+
     window.performance.now = function now(){
       return Date.now() - nowOffset;
     }
- 
+
   }
- 
+
 })();
 
 function rStats( settings ) {
@@ -38,7 +38,7 @@ function rStats( settings ) {
         _colours = [ '#850700', '#c74900', '#fcb300', '#284280', '#4c7c0c' ];
 
     if( !_settings.values ) _settings.values = {};
-    
+
     function Graph( _dom, _id ) {
 
         var _canvas = document.createElement( 'canvas' ),
@@ -150,6 +150,7 @@ function rStats( settings ) {
             _time,
             _value = 0,
             _total = 0,
+            _ticks = 0,
             _dom = document.createElement( 'div' ),
             _spanId = document.createElement( 'span' ),
             _spanValue = document.createElement( 'span' ),
@@ -169,7 +170,7 @@ function rStats( settings ) {
         _spanValue.style.right = '210px';
         _spanValue.style.top = 0;
         _spanValue.style.textAlign = 'right';
-        
+
         _dom.appendChild( _spanId );
         _dom.appendChild( _spanValue );
         if( group ) group.div.appendChild( _dom );
@@ -186,9 +187,28 @@ function rStats( settings ) {
             _value = performance.now() - _time;
         }
 
+        function _startAvg(){
+            _time = performance.now();
+        }
+
+        function _endAvg( maxTicks ) {
+            _total += performance.now() - _time;
+            _ticks++;
+            if( _ticks > maxTicks ) {
+                _value = _total / _ticks;
+                _total = 0;
+                _ticks = 0;
+            }
+        }
+
         function _tick() {
             _end();
             _start();
+        }
+
+        function _tickAvg( maxTicks ) {
+            _endAvg(maxTicks);
+            _startAvg();
         }
 
         function _draw() {
@@ -218,6 +238,9 @@ function rStats( settings ) {
             start: _start,
             tick: _tick,
             end: _end,
+            startAvg: _startAvg,
+            tickAvg: _tickAvg,
+            endAvg: _endAvg,
             frame: _frame,
             value: function(){ return _value; },
             draw: _draw
@@ -351,7 +374,7 @@ function rStats( settings ) {
     }
 
     function _update() {
-        
+
         for( var j in _settings.plugins ) {
             _settings.plugins[ j ].update();
         }
