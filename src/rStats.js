@@ -152,7 +152,8 @@ function rStats( settings ) {
             _total = 0,
             _dom = document.createElement( 'div' ),
             _spanId = document.createElement( 'span' ),
-            _spanValue = document.createElement( 'span' ),
+            _spanValue = document.createElement( 'div' ),
+            _spanValueText = document.createTextNode( '' ),
             _graph = new Graph( _dom, _id ),
             _def = _settings?_settings.values[ _id.toLowerCase() ]:null;
 
@@ -167,8 +168,12 @@ function rStats( settings ) {
 
         _spanValue.style.position = 'absolute';
         _spanValue.style.right = '210px';
+        _spanValue.style.width = '3em';
+        _spanValue.style.height = '1em';
         _spanValue.style.top = 0;
         _spanValue.style.textAlign = 'right';
+
+        _spanValue.appendChild( _spanValueText );
         
         _dom.appendChild( _spanId );
         _dom.appendChild( _spanValue );
@@ -192,7 +197,7 @@ function rStats( settings ) {
         }
 
         function _draw() {
-            _spanValue.textContent = Math.round( _value * 100 ) / 100;
+            _spanValueText.nodeValue = Math.round( _value * 100 ) / 100;
             var a = ( _def && ( ( _def.below && _value < _def.below ) || ( _def.over && _value > _def.over ) ) );
             _graph.draw( _value, a );
             _dom.style.color = a?'#b70000':'#ffffff';
@@ -240,7 +245,8 @@ function rStats( settings ) {
 
     }
 
-    var _div;
+    var _div,
+        _height = null;
 
     var _perfCounters = {},
         _samples = {};
@@ -296,6 +302,7 @@ function rStats( settings ) {
         _div.style.width = '350px';
         _div.style.fontFamily = 'Roboto Condensed, tahoma, sans-serif';
         _div.style.left = _div.style.top = 0;
+        _div.style.overflow = 'hidden';
         document.body.appendChild( _div );
 
         if( !_settings ) return;
@@ -377,6 +384,11 @@ function rStats( settings ) {
                 }
                 f.graph.draw( v );
             }
+        }
+
+        if( _height == null ) {
+            _height = _div.clientHeight;
+            _div.style.height = _height + 'px';
         }
 
     }
