@@ -174,11 +174,12 @@ function init() {
 
     rS = new rStats( {
         values: {
-            frame: { caption: 'Total frame time (ms)', over: 16 },
-            fps: { caption: 'Framerate (FPS)', below: 30 },
+            frame: { caption: 'Total frame time (ms)', over: 16, average: true, avgMs: 100 },
+            fps: { caption: 'Framerate (FPS)', below: 37 },
             calls: { caption: 'Calls (three.js)', over: 3000 },
-            raf: { caption: 'Time since last rAF (ms)' },
-            rstats: { caption: 'rStats update (ms)' }
+            raf: { caption: 'Time since last rAF (ms)', average: true, avgMs: 100 },
+            rstats: { caption: 'rStats update (ms)', average: true, avgMs: 100 },
+            texture: { caption: 'GenTex', average: true, avgMs: 100 }
         },
         groups: [
             { caption: 'Framerate', values: [ 'fps', 'raf' ] },
