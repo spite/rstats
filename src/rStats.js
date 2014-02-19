@@ -39,7 +39,7 @@ function rStats( settings ) {
     }
     
     importCSS( 'http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' );
-    importCSS( 'rstats.css' );
+    importCSS( 'rStats.css' );
 
     var _settings = settings || {},
         _colours = [ '#850700', '#c74900', '#fcb300', '#284280', '#4c7c0c' ];
@@ -56,7 +56,7 @@ function rStats( settings ) {
 
         var c = _def.color?_def.color:'#666666';
         var wc = _def.warningColor?_def.warningColor:'#b70000';
-        
+
         var _dotCanvas = document.createElement( 'canvas' ),
             _dotCtx = _dotCanvas.getContext( '2d' );
         _dotCanvas.width = 1;
