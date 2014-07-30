@@ -28,6 +28,15 @@ function rStats( settings ) {
 
     'use strict';
 
+    function iterateKeys( array, callback ) {
+
+        for( var j in array ) {
+            if( array.hasOwnProperty( j ) ) { 
+                callback( j );
+            }
+        }
+    }
+
     function importCSS( url ){
 
         var element = document.createElement('link');
@@ -141,12 +150,12 @@ function rStats( settings ) {
         function _draw( v ) {
             _ctx.drawImage( _canvas, 1, 0, _canvas.width - 1, _canvas.height, 0, 0, _canvas.width - 1, _canvas.height );
             var th = 0;
-            for( var j in v ) {
+            iterateKeys( v, function( j ) {
                 var h = v[ j ] * _canvas.height;
                 _ctx.fillStyle = _colours[ j ];
                 _ctx.fillRect( _canvas.width - 1, th, 1, h );
                 th += h;
-            }
+            } );
         }
 
         _init();
@@ -290,13 +299,12 @@ function rStats( settings ) {
 
         var group = null;
         if( _settings && _settings.groups ) {
-            for( var j in _settings.groups ) {
+            iterateKeys( _settings.groups, function( j ) {
                 var g = _settings.groups[ parseInt( j, 10 ) ];
-                if( g.values.indexOf( id.toLowerCase() ) != -1 ) {
+                if( !group && g.values.indexOf( id.toLowerCase() ) != -1 ) {
                     group = g;
-                    continue;
                 }
-            }
+            } );
         }
 
         var p = new PerfCounter( id, group );
@@ -313,9 +321,9 @@ function rStats( settings ) {
             if( !_settings.fractions ) _settings.fractions = [];
             for( var j = 0; j < _settings.plugins.length; j++ ) {
                 _settings.plugins[ j ].attach( _perf );
-                for( var k in _settings.plugins[ j ].values ) {
-                    _settings.values[ k ] = _settings.plugins[ j ].values [ k ];
-                }
+                iterateKeys( _settings.plugins[ j ].values, function( k ) {
+                    _settings.values[ k ] = _settings.plugins[ j ].values[ k ];
+                } );
                 _settings.groups = _settings.groups.concat( _settings.plugins[ j ].groups );
                 _settings.fractions = _settings.fractions.concat( _settings.plugins[ j ].fractions );
             }
@@ -337,7 +345,7 @@ function rStats( settings ) {
         if( !_settings ) return;
 
         if( _settings.groups ) {
-            for( var j in _settings.groups ) {
+            iterateKeys( _settings.groups, function( j ) {
                 var g = _settings.groups[ parseInt( j, 10 ) ];
                 var div = document.createElement( 'div' );
                 div.className = 'rs-group';
@@ -350,11 +358,11 @@ function rStats( settings ) {
                 }.bind( div ) );
                 _div.appendChild( h1 );
                 _div.appendChild( div );
-            }
+            } );
         }
 
         if( _settings.fractions ) {
-            for( var j in _settings.fractions ) {
+            iterateKeys( _settings.fractions, function( j ) {
                 var f = _settings.fractions[ parseInt( j, 10 ) ];
                 var div = document.createElement( 'div' );
                 div.className = 'rs-fraction';
@@ -362,51 +370,51 @@ function rStats( settings ) {
                 legend.className = 'rs-legend';
                 
                 var h = 0;
-                for( var k in _settings.fractions[ j ].steps ) {
+                iterateKeys( _settings.fractions[ j ].steps, function( k ) {
                     var p = document.createElement( 'p' );
                     p.textContent = _settings.fractions[ j ].steps[ k ];
                     p.style.color = _colours[ h ];
                     legend.appendChild( p );
                     h++;
-                }
+                } );
                 div.appendChild( legend );
                 div.style.height = h * _elHeight + 'px';
                 f.div = div;
                 var graph = new StackGraph( div, h );
                 f.graph = graph;
                 _div.appendChild( div );
-            }
+            } );
         }
 
     }
 
     function _update() {
         
-        for( var j in _settings.plugins ) {
+        iterateKeys( _settings.plugins, function( j ) {
             _settings.plugins[ j ].update();
-        }
+        } );
 
-        for( var j in _perfCounters ) {
+        iterateKeys( _perfCounters, function( j ) {
             _perfCounters[ j ].draw();
-        }
+        } );
 
         if( _settings && _settings.fractions ) {
-            for( var j in _settings.fractions ) {
+            iterateKeys( _settings.fractions, function( j ) {
                 var f = _settings.fractions[ parseInt( j, 10 ) ];
                 var v = [];
                 var base = _perfCounters[ f.base.toLowerCase() ];
                 if( base ) {
                     base = base.value();
-                    for( var k in _settings.fractions[ j ].steps ) {
+                    iterateKeys( _settings.fractions[ j ].steps, function( k ) {
                         var s = _settings.fractions[ j ].steps[ parseInt( k, 10 ) ].toLowerCase();
                         var val = _perfCounters[ s ];
                         if( val ) {
                             v.push( val.value() / base );
                         }
-                    }
+                    } );
                 }
                 f.graph.draw( v );
-            }
+            } );
         }
 
         /*if( _height != _div.clientHeight ) {
