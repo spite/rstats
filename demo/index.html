@@ -66,7 +66,7 @@
 
 'use strict';
 
-var rS, glS, tS;
+var bS, rS, glS, tS;
 
 var renderer, scene, camera, mesh, fov = 120, nfov = 70,
 container = document.getElementById( 'container' ),
@@ -169,6 +169,7 @@ function init() {
     particles.sortParticles = true;
     scene.add( particles );
 
+    bS = new BrowserStats();
     glS = new glStats();
     tS = new threeStats( renderer );
 
@@ -189,6 +190,7 @@ function init() {
             { base: 'frame', steps: [ 'texture', 'setup', 'render' ] }
         ],
         plugins: [
+            bS,
             tS,
             glS
         ]

@@ -15,7 +15,6 @@
       nowOffset = performance.timing.navigationStart
     }
  
- 
     window.performance.now = function now(){
       return Date.now() - nowOffset;
     }
