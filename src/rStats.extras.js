@@ -154,7 +154,7 @@ var BrowserStats = function() {
         _totalJSHeapSize = 0;
 
     if (window.performance && !performance.memory){
-        performance.memory = { usedJSHeapSize : 0 };
+        performance.memory = { usedJSHeapSize : 0, totalJSHeapSize: 0 };
     }
 
     if( performance.memory.totalJSHeapSize === 0 ){
