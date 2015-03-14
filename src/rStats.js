@@ -429,6 +429,7 @@ function rStats( settings ) {
     return function( id ) {
         if( id ) return _perf( id );
         return {
+            element: _base,
             update: _update
         }
     }
