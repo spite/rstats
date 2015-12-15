@@ -254,8 +254,10 @@ window.BrowserStats = function () {
 
 };
 
-module.exports = {
-  glStats: window.glStats,
-  threeStats: window.threeStats,
-  BrowserStats: window.BrowserStats
-};
+if (typeof module === 'object') {
+  module.exports = {
+    glStats: window.glStats,
+    threeStats: window.threeStats,
+    BrowserStats: window.BrowserStats
+  };
+}

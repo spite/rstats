@@ -24,7 +24,7 @@
 
 } )();
 
-module.exports = window.rStats = rStats ( settings ) {
+window.rStats = function rStats ( settings ) {
 
     function iterateKeys ( array, callback ) {
         var keys = Object.keys( array );
@@ -424,4 +424,8 @@ module.exports = window.rStats = rStats ( settings ) {
         };
     };
 
+}
+
+if (typeof module === 'object') {
+  module.exports = window.rStats;
 }
