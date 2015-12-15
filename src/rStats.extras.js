@@ -1,4 +1,4 @@
-var glStats = function () {
+window.glStats = function () {
 
     var _rS = null;
 
@@ -99,7 +99,7 @@ var glStats = function () {
 
 };
 
-var threeStats = function ( renderer ) {
+window.threeStats = function ( renderer ) {
 
     var _rS = null;
 
@@ -174,7 +174,7 @@ var threeStats = function ( renderer ) {
  *   From https://github.com/paulirish/memory-stats.js
  */
 
-var BrowserStats = function () {
+window.BrowserStats = function () {
 
     var _rS = null;
 
@@ -252,4 +252,10 @@ var BrowserStats = function () {
         fractions: _fractions
     };
 
+};
+
+module.exports = {
+  glStats: window.glStats,
+  threeStats: window.threeStats,
+  BrowserStats: window.BrowserStats
 };

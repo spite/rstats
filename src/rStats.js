@@ -24,7 +24,7 @@
 
 } )();
 
-function rStats ( settings ) {
+module.exports = window.rStats = rStats ( settings ) {
 
     function iterateKeys ( array, callback ) {
         var keys = Object.keys( array );
