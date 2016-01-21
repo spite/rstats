@@ -51,11 +51,10 @@
             }
 
         </style>
-        <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' rel='stylesheet' type='text/css'>
     </head>
     <body>
         <div id="container" ></div>
-       
+
         </div>
 
 <script src="three.min.js"></script>
@@ -102,7 +101,7 @@ document.getElementById( 'fullscreenBtn' ).addEventListener( 'click', function( 
 var mat, canvas, ctx;
 
 function init() {
-    
+
     scene = new THREE.Scene();
 
     camera = new THREE.PerspectiveCamera( fov, window.innerWidth / window.innerHeight, 10, 1000 );
@@ -197,7 +196,7 @@ function init() {
     } );
 
     render();
-    
+
 }
 
 function onWindowResize() {
@@ -227,7 +226,7 @@ function onMouseWheel( event ) {
         nfov += event.detail * 1.0;
 
     }
-    
+
 }
 
 function onMouseDown( event ) {
@@ -242,25 +241,25 @@ function onMouseDown( event ) {
 
     onPointerDownLon = lon;
     onPointerDownLat = lat;
-    
+
 }
 
 function onMouseMove( event ) {
 
     if ( isUserInteracting ) {
-    
+
         nlon = ( event.clientX - onPointerDownPointerX ) * 0.1 + onPointerDownLon;
         nlat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
-        
+
     }
 
 }
 
 function onMouseUp( event ) {
-    
+
     uiElements.forEach( function( e ) { e.classList.remove( 'hidden' ); } );
     isUserInteracting = false;
-    
+
 }
 
 var oDist = 0, oFov;
@@ -278,7 +277,7 @@ function onTouchStart( event ) {
                 Math.pow( t[ 0 ].clientX - t[ 1 ].clientX, 2 ) +
                 Math.pow( t[ 0 ].clientY - t[ 1 ].clientY, 2 ) );
         oFov = nfov;
-        
+
         isUserPinching = true;
 
     } else {
@@ -291,7 +290,7 @@ function onTouchStart( event ) {
 
         onPointerDownLon = lon;
         onPointerDownLat = lat;
-    
+
     }
 
 }
@@ -323,7 +322,7 @@ function onTouchEnd( event ) {
 
     isUserInteracting = false;
     isUserPinching = false;
-    
+
 }
 
 var perfTime, prevPerfTime = performance.now();
@@ -333,7 +332,7 @@ function render() {
 
     rS( 'frame' ).start();
     glS.start();
-    
+
     rS( 'rAF' ).tick();
     rS( 'FPS' ).frame();
 
@@ -360,7 +359,7 @@ function render() {
     fov += ( nfov - fov ) * .2;
 
     camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
-   
+
     lat = Math.max( - 85, Math.min( 85, lat ) );
     phi = ( 90 - lat ) * Math.PI / 180;
     theta = lon * Math.PI / 180;
@@ -370,9 +369,9 @@ function render() {
     camera.position.z = 100 * Math.sin( phi ) * Math.sin( theta );
 
     camera.lookAt( scene.position );
-  
+
     rS( 'setup' ).end();
-  
+
     rS( 'render' ).start();
     renderer.render( scene, camera );
     rS( 'render' ).end();

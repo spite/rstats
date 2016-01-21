@@ -46,8 +46,13 @@ window.rStats = function rStats ( settings ) {
     var _settings = settings || {};
     var _colours = _settings.colours || [ '#850700', '#c74900', '#fcb300', '#284280', '#4c7c0c' ];
 
-    importCSS( 'http://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' );
-    importCSS( ( _settings.CSSPath ? _settings.CSSPath : '' ) + 'rStats.css' );
+    var _cssFont = 'https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300';
+    var _cssRStats = ( _settings.CSSPath ? _settings.CSSPath : '' ) + 'rStats.css';
+
+    var _css = _settings.css || [ _cssFont, _cssRStats ];
+    _css.forEach(function (uri) {
+        importCSS( uri );
+    });
 
     if ( !_settings.values ) _settings.values = {};
 
