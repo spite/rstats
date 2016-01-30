@@ -22,6 +22,14 @@
 
     }
 
+    if( !window.performance.mark ) {
+        window.performance.mark = function(){}
+    }
+
+    if( !window.performance.measure ) {
+        window.performance.measure = function(){}
+    }
+
 } )();
 
 window.rStats = function rStats ( settings ) {
@@ -183,7 +191,8 @@ window.rStats = function rStats ( settings ) {
             _spanValue = document.createElement( 'div' ),
             _spanValueText = document.createTextNode( '' ),
             _def = _settings ? _settings.values[ _id.toLowerCase() ] : null,
-            _graph = new Graph( _dom, _id, _def );
+            _graph = new Graph( _dom, _id, _def ),
+            _started = false;
 
         _dom.className = 'rs-counter-base';
 
@@ -216,10 +225,18 @@ window.rStats = function rStats ( settings ) {
 
         function _start () {
             _time = performance.now();
+            if( _settings.userTimingAPI ) performance.mark( _id + '-start' );
+            _started = true;
         }
 
         function _end () {
             _value = performance.now() - _time;
+            if( _settings.userTimingAPI ) {
+                performance.mark( _id + '-end' );
+                if( _started ) {
+                    performance.measure( _id, _id + '-start', _id + '-end' );
+                }
+            }
             _average( _value );
         }
 
