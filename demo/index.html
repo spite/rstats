@@ -66,6 +66,7 @@
 'use strict';
 
 var bS, rS, glS, tS;
+var rS2;
 
 var renderer, scene, camera, mesh, fov = 120, nfov = 70,
 container = document.getElementById( 'container' ),
@@ -172,7 +173,7 @@ function init() {
     glS = new glStats();
     tS = new threeStats( renderer );
 
-    rS = new rStats( {
+    rS = rStats( 'foo' );/*{
         userTimingAPI: true,
         values: {
             frame: { caption: 'Total frame time (ms)', over: 16, average: true, avgMs: 100 },
@@ -194,7 +195,9 @@ function init() {
             tS,
             glS
         ]
-    } );
+    } );*/
+
+//    rS.attachView( new rView() );
 
     render();
 
@@ -379,12 +382,12 @@ function render() {
 
     rS( 'frame' ).end();
 
-    /*rS( 'memory.limit' ).set( performance.memory.jsHeapSizeLimit );
+    rS( 'memory.limit' ).set( performance.memory.jsHeapSizeLimit );
     rS( 'memory.used' ).set( performance.memory.usedJSHeapSize );
-    rS( 'memory.total' ).set( performance.memory.totalJSHeapSize );*/
+    rS( 'memory.total' ).set( performance.memory.totalJSHeapSize );
 
     rS( 'rStats' ).start();
-    rS().update();
+    rS.update();
     rS( 'rStats' ).end();
 
     requestAnimationFrame( render );

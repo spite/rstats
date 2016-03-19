@@ -5,34 +5,34 @@
 
     // prepare base perf object
     if ( typeof window.performance === 'undefined' ) {
-        window.performance = {};
+    	window.performance = {};
     }
 
     if ( !window.performance.now ) {
 
-        var nowOffset = Date.now();
+    	var nowOffset = Date.now();
 
-        if ( performance.timing && performance.timing.navigationStart ) {
-            nowOffset = performance.timing.navigationStart;
-        }
+    	if ( performance.timing && performance.timing.navigationStart ) {
+    		nowOffset = performance.timing.navigationStart;
+    	}
 
-        window.performance.now = function now () {
-            return Date.now() - nowOffset;
-        };
+    	window.performance.now = function now () {
+    		return Date.now() - nowOffset;
+    	};
 
     }
 
     if( !window.performance.mark ) {
-        window.performance.mark = function(){}
+    	window.performance.mark = function(){}
     }
 
     if( !window.performance.measure ) {
-        window.performance.measure = function(){}
+    	window.performance.measure = function(){}
     }
 
 } )();
 
-window.rStats = function rStats ( settings ) {
+/*window.rStats = function rStats ( settings ) {
 
     function iterateKeys ( array, callback ) {
         var keys = Object.keys( array );
@@ -427,13 +427,6 @@ window.rStats = function rStats ( settings ) {
                 f.graph.draw( v );
             } );
         }
-
-        /*if( _height != _div.clientHeight ) {
-            _height = _div.clientHeight;
-            _base.style.height = _height + 2 * _elHeight + 'px';
-        console.log( _base.clientHeight );
-        }*/
-
     }
 
     _init();
@@ -446,8 +439,121 @@ window.rStats = function rStats ( settings ) {
         };
     };
 
+}*/
+
+function rValue( id ) {
+
+	this.id = id;
+	this.started = false;
+	this.time = null;
+	this.value = 0;
+	this.total = 0;
+
 }
 
+rValue.prototype.start = function() {
+	this.started = true;
+	//if( _settings.userTimingAPI ) 
+	performance.mark( this.id + '-start' );
+	this.time = performance.now();
+	}
+
+rValue.prototype.end = function() {
+
+	this.value = performance.now() - this.time;
+	//if( _settings.userTimingAPI ) {
+		performance.mark( this.id + '-end' );
+		if( this.started ) {
+			performance.measure( this.id, this.id + '-start', this.id + '-end' );
+		}
+	//}
+	//_average( _value );
+
+}
+
+rValue.prototype.tick = function() {
+	this.end();
+	this.start();
+}
+
+rValue.prototype.frame = function() {
+
+	var t = performance.now();
+	var e = t - this.time;
+	this.total++;
+	if ( e > 1000 ) {
+		/*if ( _def && _def.interpolate === false ) {
+			_value = this.total;
+		} else {
+			_value = this.total * 1000 / e;
+		}*/
+		this.value = this.total * 1000 / e;
+		this.total = 0;
+		this.time = t;
+		//_average( _value );
+	}
+
+}
+
+rValue.prototype.set = function( value ) {
+	
+	this.value = value;
+
+}
+
+function rView() {
+
+}
+
+rView.prototype.update = function( keys, values ) {
+
+	keys.forEach( function( key ) {
+
+		console.log( key, values[ key ].value );
+
+	} );
+
+}
+
+function rStats( id ) {
+
+	var id = id;
+
+	var values = {};
+	var keys = [];
+	var views = [];
+
+	function body( id ) {
+
+		id = ( id || 'default' ).toLowerCase();
+		if( values[ id ] ) return values[ id ];
+
+		var v = new rValue( id );
+		values[ id ] = v
+		keys.push( id );
+		return v;
+
+	}
+
+	body.update = function() {
+
+		views.forEach( function( v ) { v.update( keys, values ) } );
+
+	}
+
+	body.attachView = function( view ) {
+
+		views.push( view );
+
+	}
+
+	return body;
+
+}
+
+window.rStats = rStats
+window.rView = rView
+
 if (typeof module === 'object') {
-  module.exports = window.rStats;
+	module.exports = window.rStats;
 }
