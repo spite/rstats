@@ -441,8 +441,9 @@
 
 }*/
 
-function rValue( id ) {
+function rValue( id, settings ) {
 
+    this.settings = settings;
 	this.id = id;
 	this.started = false;
 	this.time = null;
@@ -453,20 +454,21 @@ function rValue( id ) {
 
 rValue.prototype.start = function() {
 	this.started = true;
-	//if( _settings.userTimingAPI ) 
-	performance.mark( this.id + '-start' );
+	if( this.settings.userTimingAPI ) {
+    	performance.mark( this.id + '-start' );
+    }
 	this.time = performance.now();
-	}
+}
 
 rValue.prototype.end = function() {
 
 	this.value = performance.now() - this.time;
-	//if( _settings.userTimingAPI ) {
+	if( this.settings.userTimingAPI ) {
 		performance.mark( this.id + '-end' );
 		if( this.started ) {
 			performance.measure( this.id, this.id + '-start', this.id + '-end' );
 		}
-	//}
+	}
 	//_average( _value );
 
 }
@@ -515,9 +517,9 @@ rView.prototype.update = function( keys, values ) {
 
 }
 
-function rStats( id ) {
+function rStats( settings ) {
 
-	var id = id;
+	var id = settings.id || 'rStats';
 
 	var values = {};
 	var keys = [];
@@ -528,7 +530,7 @@ function rStats( id ) {
 		id = ( id || 'default' ).toLowerCase();
 		if( values[ id ] ) return values[ id ];
 
-		var v = new rValue( id );
+		var v = new rValue( id, settings );
 		values[ id ] = v
 		keys.push( id );
 		return v;

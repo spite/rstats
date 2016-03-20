@@ -169,13 +169,13 @@ function init() {
     particles.sortParticles = true;
     scene.add( particles );
 
-    bS = new BrowserStats();
+    /*bS = new BrowserStats();
     glS = new glStats();
-    tS = new threeStats( renderer );
+    tS = new threeStats( renderer );*/
 
-    rS = rStats( 'foo' );/*{
-        userTimingAPI: true,
-        values: {
+    rS = rStats( {
+        userTimingAPI: false,
+        /*values: {
             frame: { caption: 'Total frame time (ms)', over: 16, average: true, avgMs: 100 },
             fps: { caption: 'Framerate (FPS)', below: 30 },
             calls: { caption: 'Calls (three.js)', over: 3000 },
@@ -194,10 +194,10 @@ function init() {
             bS,
             tS,
             glS
-        ]
-    } );*/
+        ]*/
+    } );
 
-//    rS.attachView( new rView() );
+    rS.attachView( new rView() );
 
     render();
 
@@ -335,7 +335,7 @@ var startTime = Date.now();
 function render() {
 
     rS( 'frame' ).start();
-    glS.start();
+    //glS.start();
 
     rS( 'rAF' ).tick();
     rS( 'FPS' ).frame();
