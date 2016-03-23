@@ -511,9 +511,63 @@ rView.prototype.update = function( keys, values ) {
 
 	keys.forEach( function( key ) {
 
-		console.log( key, values[ key ].value );
+		//console.log( key, values[ key ].value );
 
 	} );
+
+    //console.log( 'frame', values[ 'frame' ].value, 1000 / values[ 'frame' ].value );
+
+}
+
+function rCSSView() {
+
+    this.fields = {};
+    this.container = document.createElement( 'div' );
+    this.container.className = 'rstats-container';
+    document.body.appendChild( this.container );
+
+}
+
+rCSSView.prototype = Object.create( rView.prototype );
+rCSSView.prototype.constructor = rCSSView;
+
+rCSSView.prototype.init = function( settings ) {
+
+    this.settings = settings;
+
+}
+
+rCSSView.prototype.addField = function( name ) {
+
+    var div = document.createElement( 'div' );
+    var nameSpan = document.createElement( 'span' );
+    nameSpan.textContent = this.settings.values[ name ] ? this.settings.values[ name ].caption : name;
+    div.appendChild( nameSpan );
+    var valueSpan = document.createElement( 'span' );
+    valueSpan.textContent = '-';
+    div.appendChild( valueSpan );
+    var graphSpan = document.createElement( 'span' );
+    div.appendChild( graphSpan );
+    
+    this.container.appendChild( div );
+
+    this.fields[ name ] = {
+        nameSpan: nameSpan,
+        valueSpan: valueSpan
+    }
+
+}
+
+rCSSView.prototype.update = function( keys, values ) {
+
+    keys.forEach( function( key ) {
+
+        if( !this.fields[ key ] ) {
+            this.addField( key )
+        }
+        this.fields[ key ].valueSpan.textContent = values[ key ].value;
+
+    }.bind( this ) );
 
 }
 
@@ -545,6 +599,7 @@ function rStats( settings ) {
 
 	body.attachView = function( view ) {
 
+        view.init( settings );
 		views.push( view );
 
 	}
