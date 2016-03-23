@@ -334,6 +334,8 @@ var startTime = Date.now();
 
 function render() {
 
+    requestAnimationFrame( render );
+
     rS( 'frame' ).start();
     //glS.start();
 
@@ -380,17 +382,15 @@ function render() {
     renderer.render( scene, camera );
     rS( 'render' ).end();
 
-    rS( 'frame' ).end();
-
     rS( 'memory.limit' ).set( performance.memory.jsHeapSizeLimit );
     rS( 'memory.used' ).set( performance.memory.usedJSHeapSize );
     rS( 'memory.total' ).set( performance.memory.totalJSHeapSize );
 
+    rS( 'frame' ).end();
+
     rS( 'rStats' ).start();
     rS.update();
     rS( 'rStats' ).end();
-
-    requestAnimationFrame( render );
 
 }
 
