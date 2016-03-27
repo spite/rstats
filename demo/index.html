@@ -143,7 +143,8 @@ function init() {
     }
 
     var num = 500;
-    var g = new THREE.CubeGeometry( 1, 1, 1 );
+    var segments = 1;
+    var g = new THREE.CubeGeometry( 1, 1, 1, segments, segments, segments );
     for( var j = 0; j < num; j++ ) {
         var m = new THREE.Mesh( g, mat );
         m.position.set( r( 100 ), r( 100 ), r( 100 ) );
@@ -176,26 +177,27 @@ function init() {
     rS = rStats( {
         userTimingAPI: false,
         values: {
-            frame:   { caption: 'Total frame time (ms)', average: true, avgMs: 100 },
-            fps:     { caption: 'Framerate (FPS)' },
-            calls:   { caption: 'Calls (three.js)' },
-            raf:     { caption: 'Time since last rAF (ms)', average: true, avgMs: 100 },
-            rstats:  { caption: 'rStats update (ms)', average: true, avgMs: 100 },
-            texture: { caption: 'GenTex', average: true, avgMs: 100 }
+            frame:   { caption: 'Total frame time', units: 'ms', average: true, avgMs: 100 },
+            fps:     { caption: 'Framerate', units: 'FPS' },
+            raf:     { caption: 'Time since last rAF', units: 'ms', average: true, avgMs: 100 },
+            rstats:  { caption: 'rStats update', units: 'ms', average: true, avgMs: 100 },
+            texture: { caption: 'GenTex', units: 'ms', average: true, avgMs: 100 },
+            render:  { average: true, avgMs: 100 }
         },
         warnings: {
             frame:   { over: 16 },
-            fps:     { below: 30 },
-            calls:   { over: 3000 },            
-        }
-        /*groups: [
+            fps:     { below: 30 }
+        },
+        decorators: {
+        },
+        groups: [
             { caption: 'Framerate', values: [ 'fps', 'raf' ] },
             { caption: 'Frame Budget', values: [ 'frame', 'texture', 'setup', 'render' ] }
         ],
         fractions: [
             { base: 'frame', steps: [ 'texture', 'setup', 'render' ] }
         ],
-        plugins: [
+        /*plugins: [
             bS,
             tS,
             glS
