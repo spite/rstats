@@ -181,14 +181,15 @@ window.BrowserStats = function () {
     var _usedJSHeapSize = 0,
         _totalJSHeapSize = 0;
 
-    if ( window.performance && !performance.memory ) {
-        performance.memory = {
-            usedJSHeapSize: 0,
-            totalJSHeapSize: 0
-        };
-    }
+    var memory = {
+        usedJSHeapSize: 0,
+        totalJSHeapSize: 0
+    };
 
-    if ( performance.memory.totalJSHeapSize === 0 ) {
+    if ( window.performance && performance.memory )
+        memory = performance.memory;
+
+    if ( memory.totalJSHeapSize === 0 ) {
         console.warn( 'totalJSHeapSize === 0... performance.memory is only available in Chrome .' );
     }
 
@@ -225,8 +226,8 @@ window.BrowserStats = function () {
     }
 
     function _update () {
-        _usedJSHeapSize = _size( performance.memory.usedJSHeapSize );
-        _totalJSHeapSize = _size( performance.memory.totalJSHeapSize );
+        _usedJSHeapSize = _size( memory.usedJSHeapSize );
+        _totalJSHeapSize = _size( memory.totalJSHeapSize );
 
         _rS( 'memory' ).set( _usedJSHeapSize );
         _rS( 'total' ).set( _totalJSHeapSize );
