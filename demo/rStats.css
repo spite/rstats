@@ -58,13 +58,14 @@
     top: 0;
 }
 
-.rs-base div.rs-counter-value{
+.rs-base span.rs-counter-value{
     position: absolute;
     left: 90px;
     width: 30px;
     height: 1em;
     top: 0;
     text-align: right;
+    white-space: nowrap;
 }
 
 .rs-base canvas.rs-canvas{

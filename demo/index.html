@@ -177,16 +177,12 @@ function init() {
     rS = rStats( {
         userTimingAPI: false,
         values: {
-            frame:   { caption: 'Total frame time', units: 'ms', average: true, avgMs: 100 },
-            fps:     { caption: 'Framerate', units: 'FPS' },
+            frame:   { caption: 'Total frame time', units: 'ms', average: true, avgMs: 100, over: 16 },
+            fps:     { caption: 'Framerate', units: 'FPS', min: 0, max: 60, below: 30 },
             raf:     { caption: 'Time since last rAF', units: 'ms', average: true, avgMs: 100 },
             rstats:  { caption: 'rStats update', units: 'ms', average: true, avgMs: 100 },
             texture: { caption: 'GenTex', units: 'ms', average: true, avgMs: 100 },
             render:  { average: true, avgMs: 100 }
-        },
-        warnings: {
-            frame:   { over: 16 },
-            fps:     { below: 30 }
         },
         decorators: {
         },
