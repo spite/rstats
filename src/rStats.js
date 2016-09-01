@@ -248,7 +248,6 @@ window.rStats = function rStats ( settings ) {
             _spanValueText.nodeValue = Math.round( v * 100 ) / 100;
             var a = ( _def && ( ( _def.below && _value < _def.below ) || ( _def.over && _value > _def.over ) ) );
             _graph.draw( _value, a );
-            _dom.style.color = a ? '#b70000' : '#ffffff';
             _dom.className = a ? 'rs-counter-base alarm' : 'rs-counter-base';
 
         }
