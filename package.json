@@ -1,0 +1,22 @@
+{
+  "name": "rstatsjs",
+  "version": "1.0.1",
+  "description": "JavaScript Performance Monitor",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spite/rstats.git"
+  },
+  "keywords": [
+    "stats"
+  ],
+  "author": "Jaume Sanchez <the.spite@gmail.com> (https://www.clicktorelease.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/spite/rstats/issues"
+  },
+  "homepage": "https://github.com/spite/rstats#readme"
+}
