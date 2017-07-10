@@ -32,6 +32,32 @@
 
 } )();
 
+/**
+ * @class rStats
+ * @param {rStats~Settings} [settings] Settings for the rStats instance.
+ */
+
+/**
+ * @typedef {Object} rStats~Settings
+ * @property {Array.<String>} [colours] An array of CSS colour values.
+ * @property {String} [CSSPath=''] Base URL where rStats.css is located.
+ * @property {Array.<String>} [css] URLs of CSS or font files to import.
+ * @property {Object.<String, rStats~CounterProperties>} [values] Properties to use for each counter.
+ * @property {Array.<Object>} [groups] Define groups of counters.
+ * @property {Array.<Object>} [fractions] Define stacked counters.
+ * @property {Array.<Object>} [plugins] Additional plugins.
+ */
+
+/**
+ * @typedef {Object} rStats~CounterProperties
+ * @property {String} [caption] Caption for this counter.
+ * @property {Boolean} [average=false] Whether the values should be averaged.
+ * @property {Number} [avgMs=1000] Duration for which the values should be averaged.
+ * @property {Number} [below] Value below which the graph should be highlighted.
+ * @property {Number} [over] Value over which the graph should be highlighted.
+ * @property {Boolean} [interpolate=true] Whether framerate should be interpolated.
+ */
+
 window.rStats = function rStats ( settings ) {
 
     function iterateKeys ( array, callback ) {
