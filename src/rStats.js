@@ -77,11 +77,19 @@ window.rStats = function rStats ( settings ) {
 
     }
 
+    function getDefaultPathFromScript () {
+        var rStatsScript = Array.from(document.querySelectorAll('script')).filter(function (script) {
+            return /rStats/.test(script.src);
+        })[0];
+        if (!rStatsScript) { return ''; }
+        return rStatsScript.src.split('/').slice(0, -2).join('/') + '/demo/';
+    }
+
     var _settings = settings || {};
     var _colours = _settings.colours || [ '#850700', '#c74900', '#fcb300', '#284280', '#4c7c0c' ];
 
     var _cssFont = 'https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300';
-    var _cssRStats = ( _settings.CSSPath ? _settings.CSSPath : '' ) + 'rStats.css';
+    var _cssRStats = ( _settings.CSSPath ? _settings.CSSPath : getDefaultPathFromScript() ) + 'rStats.css';
 
     var _css = _settings.css || [ _cssFont, _cssRStats ];
     _css.forEach(function (uri) {
