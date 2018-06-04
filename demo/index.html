@@ -159,12 +159,12 @@ function init() {
         geometry.vertices.push( v );
     }
 
-    var sprite = THREE.ImageUtils.loadTexture( 'disc.png' );
+    var sprite = new THREE.TextureLoader().load( 'disc.png' );
 
-    var material = new THREE.ParticleSystemMaterial( { size: 3, sizeAttenuation: true, map: sprite, transparent: true } );
+    var material = new THREE.PointsMaterial( { size: 3, sizeAttenuation: true, map: sprite, transparent: true } );
     material.color.setHSL( 1.0, 0.3, 0.7 );
 
-    var particles = new THREE.ParticleSystem( geometry, material );
+    var particles = new THREE.Points( geometry, material );
     particles.sortParticles = true;
     scene.add( particles );
 
@@ -203,7 +203,15 @@ function init() {
 function onWindowResize() {
     var s = 1;
     renderer.setSize( s * window.innerWidth, s * window.innerHeight );
-    camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
+
+    makePerspective();
+}
+
+function makePerspective() {
+  var aspect = window.innerWidth / window.innerHeight;
+  camera.fov = fov;
+  camera.aspect = aspect;
+  camera.updateProjectionMatrix();
 }
 
 function onMouseWheel( event ) {
@@ -359,7 +367,7 @@ function render() {
     lat += ( nlat - lat ) * .2;
     fov += ( nfov - fov ) * .2;
 
-    camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
+    makePerspective();
 
     lat = Math.max( - 85, Math.min( 85, lat ) );
     phi = ( 90 - lat ) * Math.PI / 180;
