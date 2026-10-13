@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>rStats demo</title>
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			*{ box-sizing: border-box; margin: 0; padding: 0 }
+			body {
+				color: #ddd;
+				font-family: 'Roboto Condensed', tahoma, sans-serif;
+				font-size: 13px;
+				background-color: #222;
+				overflow: hidden;
+				line-height: 1.4em;
+			}
+			a{ color: #ec6e11; font-weight: bold; text-decoration: none; border-bottom: 1px solid rgba( 236, 110, 17, .2 ); transition: color 150ms ease-out, border-color 150ms ease-out; }
+			a:hover{ color: #fff; border-bottom: 1px solid rgba( 255,255,255, .2 );}
+			#container{ position: absolute; left: 0; top: 0; width: 100%; height: 100%; bottom: 0; background-color: #222; }
+			#title{ position: absolute; right: 10px; bottom: 10px; text-align: right; background-color: rgba( 34, 34, 34, .8 ); padding: 10px; }
+			h1{ font-weight: 400; font-size: 16px; margin-bottom: .5em; color: #eee;}
+			p{ margin-bottom: .5em;}
+		</style>
+		<script type="importmap">
+		{
+			"imports": {
+				"three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"
+			}
+		}
+		</script>
+	</head>
+	<body>
+
+		<div id="container"></div>
+		<div id="title">
+			<h1>rStats · <a href="index.html">Introduction</a> · <a href="https://github.com/spite/rstats">GitHub</a></h1>
+			<p>The panel on the left measures this page: the time of each part of the frame, the WebGL calls, what three.js reports and the memory.</p>
+			<p>Click the name of a group to fold it. Move the pointer to see how many of its events arrive per second. Drag to look around, scroll to zoom. Press H to hide the panel.</p>
+		</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { rStats } from '../src/rStats.js';
+import { glStats, threeStats, BrowserStats } from '../src/rStats.extras.js';
+
+const container = document.getElementById( 'container' );
+
+let fov = 120, nfov = 70,
+	lon = 90, nlon = 110,
+	lat = 0, nlat = 17,
+	isUserInteracting = false,
+	onPointerDownPointerX, onPointerDownPointerY, onPointerDownLon, onPointerDownLat;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera( fov, window.innerWidth / window.innerHeight, 10, 1000 );
+camera.position.z = 100;
+scene.add( camera );
+
+const renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.setSize( window.innerWidth, window.innerHeight );
+container.appendChild( renderer.domElement );
+
+// a texture that is drawn again on every frame, to have something to measure
+const canvas = document.createElement( 'canvas' );
+canvas.width = 512;
+canvas.height = 512;
+const ctx = canvas.getContext( '2d' );
+const texture = new THREE.CanvasTexture( canvas );
+texture.colorSpace = THREE.SRGBColorSpace;
+const mat = new THREE.MeshBasicMaterial( { map: texture } );
+
+function r( d ) {
+
+	return ( .5 - Math.random() ) * d;
+
+}
+
+const num = 500;
+const g = new THREE.BoxGeometry( 1, 1, 1 );
+for ( let j = 0; j < num; j ++ ) {
+
+	const m = new THREE.Mesh( g, mat );
+	m.position.set( r( 100 ), r( 100 ), r( 100 ) );
+	m.rotation.set( r( 2 * Math.PI ), r( 2 * Math.PI ), r( 2 * Math.PI ) );
+	m.scale.set( 1 + r( 1 ), 1 + r( 1 ), 1 + r( 1 ) );
+	scene.add( m );
+
+}
+
+const positions = [];
+for ( let j = 0; j < num; j ++ ) positions.push( r( 100 ), r( 100 ), r( 100 ) );
+
+const geometry = new THREE.BufferGeometry();
+geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+
+const sprite = new THREE.TextureLoader().load( 'disc.png' );
+sprite.colorSpace = THREE.SRGBColorSpace;
+const material = new THREE.PointsMaterial( { size: 3, sizeAttenuation: true, map: sprite, transparent: true, depthWrite: false } );
+material.color.setHSL( 1.0, 0.3, 0.7 );
+scene.add( new THREE.Points( geometry, material ) );
+
+const bS = new BrowserStats();
+const glS = new glStats();
+const tS = new threeStats( renderer );
+
+const rS = new rStats( {
+	css: [ 'https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' ],
+	userTimingAPI: true,
+	values: {
+		frame: { caption: 'Total frame time (ms)', over: 16, average: true, avgMs: 100 },
+		fps: { caption: 'Framerate (FPS)', below: 30 },
+		raf: { caption: 'Time since rAF (ms)', average: true, avgMs: 100 },
+		moves: { caption: 'Pointer moves / s' },
+		rstats: { caption: 'rStats update (ms)', average: true, avgMs: 100 },
+		texture: { caption: 'GenTex', average: true, avgMs: 100 },
+		setup: { caption: 'Setup', average: true, avgMs: 100 },
+		render: { caption: 'Render', average: true, avgMs: 100 }
+	},
+	groups: [
+		{ caption: 'Framerate', values: [ 'fps', 'raf' ] },
+		{ caption: 'Input', values: [ 'moves' ] },
+		{ caption: 'Frame Budget', values: [ 'frame', 'texture', 'setup', 'render' ] }
+	],
+	fractions: [
+		{ base: 'frame', steps: [ 'texture', 'setup', 'render' ] }
+	],
+	plugins: [
+		bS,
+		tS,
+		glS
+	]
+} );
+
+function onWindowResize() {
+
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	camera.aspect = window.innerWidth / window.innerHeight;
+
+}
+
+container.addEventListener( 'pointerdown', function ( event ) {
+
+	if ( ! event.isPrimary ) return;
+
+	event.preventDefault();
+	container.setPointerCapture( event.pointerId );
+	isUserInteracting = true;
+	onPointerDownPointerX = event.clientX;
+	onPointerDownPointerY = event.clientY;
+	onPointerDownLon = lon;
+	onPointerDownLat = lat;
+
+} );
+
+container.addEventListener( 'pointermove', function ( event ) {
+
+	if ( ! isUserInteracting || ! event.isPrimary ) return;
+
+	nlon = ( event.clientX - onPointerDownPointerX ) * 0.1 + onPointerDownLon;
+	nlat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
+
+} );
+
+function onPointerUp() {
+
+	isUserInteracting = false;
+
+}
+
+container.addEventListener( 'pointerup', onPointerUp );
+container.addEventListener( 'pointercancel', onPointerUp );
+container.style.touchAction = 'none';
+
+container.addEventListener( 'wheel', function ( event ) {
+
+	event.preventDefault();
+	nfov += event.deltaY * 0.02;
+
+}, { passive: false } );
+
+let hidden = false;
+window.addEventListener( 'keydown', function ( event ) {
+
+	if ( event.key !== 'h' && event.key !== 'H' ) return;
+
+	hidden = ! hidden;
+	if ( hidden ) rS().hide(); else rS().show();
+
+} );
+
+// counts the events of the pointer, wherever it is. The first call creates the counter
+rS( 'moves' ).mark( 0 );
+
+window.addEventListener( 'pointermove', function () {
+
+	rS( 'moves' ).mark();
+
+} );
+
+window.addEventListener( 'resize', onWindowResize );
+onWindowResize();
+
+function render() {
+
+	rS( 'frame' ).start();
+	glS.start();
+
+	rS( 'rAF' ).tick();
+	rS( 'FPS' ).frame();
+
+	rS( 'texture' ).start();
+	for ( let j = 0; j < 10; j ++ ) {
+
+		ctx.fillStyle = '#' + Math.floor( Math.random() * 16777215 ).toString( 16 ).padStart( 6, '0' );
+		const x = Math.random() * canvas.width,
+			y = Math.random() * canvas.height,
+			w = Math.random() * canvas.width,
+			h = Math.random() * canvas.height;
+		ctx.fillRect( x, y, w, h );
+
+	}
+
+	texture.needsUpdate = true;
+	rS( 'texture' ).end();
+
+	rS( 'setup' ).start();
+	nfov = Math.max( 1, Math.min( 150, nfov ) );
+
+	lon += ( nlon - lon ) * .2;
+	lat += ( nlat - lat ) * .2;
+	fov += ( nfov - fov ) * .2;
+	camera.fov = fov;
+	camera.updateProjectionMatrix();
+
+	lat = Math.max( - 85, Math.min( 85, lat ) );
+	const phi = ( 90 - lat ) * Math.PI / 180;
+	const theta = lon * Math.PI / 180;
+
+	camera.position.x = 100 * Math.sin( phi ) * Math.cos( theta );
+	camera.position.y = 100 * Math.cos( phi );
+	camera.position.z = 100 * Math.sin( phi ) * Math.sin( theta );
+	camera.lookAt( scene.position );
+	rS( 'setup' ).end();
+
+	rS( 'render' ).start();
+	renderer.render( scene, camera );
+	rS( 'render' ).end();
+
+	rS( 'frame' ).end();
+
+	rS( 'rStats' ).start();
+	rS().update();
+	rS( 'rStats' ).end();
+
+	requestAnimationFrame( render );
+
+}
+
+render();
+</script>
+
+	</body>
+</html>

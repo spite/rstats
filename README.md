@@ -4,8 +4,9 @@ rStats aims to provide a way of measuring and visualizing performance of your co
 
 [![npm](https://img.shields.io/npm/v/rstatsjs.svg)](https://www.npmjs.com/package/rstatsjs)
 
-#### Demo ####
-- **[rStats measuring a three.js scene](https://spite.github.io/rstats/demo/)**: the time of each part of the frame, the WebGL calls, what three.js reports and the memory
+#### Demos ####
+- **[Introduction](https://spite.github.io/rstats/demo/)**: what rStats does, step by step, with every example running in the page
+- **[rStats measuring a three.js scene](https://spite.github.io/rstats/demo/scene.html)**: the time of each part of the frame, the WebGL calls, what three.js reports and the memory
 
 <a href="https://spite.github.io/rstats/demo/"><img src="https://raw.githubusercontent.com/spite/rstats/master/demo/header.jpg" alt="rStats" width="100%"/></a>
 
@@ -39,7 +40,7 @@ and import it in your code
 ```js
 import { rStats } from 'rstatsjs';
 ```
-It's a plain ES module, so it also works without a bundler (see [demo/index.html](demo/index.html)).
+It's a plain ES module, so it also works without a bundler (see [demo/scene.html](demo/scene.html)).
 
 Create an rStats object:
 ```js
