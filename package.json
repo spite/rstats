@@ -1,6 +1,6 @@
 {
   "name": "rstatsjs",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "JavaScript Performance Monitor: measure and plot the time of each part of your update loop",
   "type": "module",
   "main": "src/rStats.js",
