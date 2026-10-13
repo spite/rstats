@@ -1,397 +1,264 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>rStats test</title>
-        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<head>
+		<meta charset="utf-8">
+		<title>rStats demo</title>
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			*{ box-sizing: border-box; margin: 0; padding: 0 }
+			body {
+				color: #ddd;
+				font-family: 'Roboto Condensed', tahoma, sans-serif;
+				font-size: 13px;
+				background-color: #222;
+				overflow: hidden;
+				line-height: 1.4em;
+			}
+			a{ color: #ec6e11; font-weight: bold; text-decoration: none; border-bottom: 1px solid rgba( 236, 110, 17, .2 ); transition: color 150ms ease-out, border-color 150ms ease-out; }
+			a:hover{ color: #fff; border-bottom: 1px solid rgba( 255,255,255, .2 );}
+			#container{ position: absolute; left: 0; top: 0; width: 100%; height: 100%; bottom: 0; background-color: #222; }
+			#title{ position: absolute; right: 10px; bottom: 10px; text-align: right; background-color: rgba( 34, 34, 34, .8 ); padding: 10px; }
+			h1{ font-weight: 400; font-size: 16px; margin-bottom: .5em; color: #eee;}
+			p{ margin-bottom: .5em;}
+		</style>
+		<script type="importmap">
+		{
+			"imports": {
+				"three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"
+			}
+		}
+		</script>
+	</head>
+	<body>
 
-        <style>
-            *{ box-sizing: border-box; -moz-box-sizing: border-box; margin: 0; padding: 0 }
-            body {
-                color: #ddd;
-                font-family: 'Roboto Condensed', tahoma, sans-serif; font-weight: 100;
-                font-size:13px;
-                background-color: #222;
-                margin: 0px;
-                overflow: hidden;
-                line-height: 1.4em;
-            }
-            a{ color: #ec6e11; font-weight: bold; text-decoration: none; border-bottom: 1px solid rgba( 236, 110, 17, .2 ); -webkit-transition: color 150ms ease-out, border-color 150ms ease-out; transition: color 150ms ease-out, border-color 150ms ease-out; }
-            a:hover{ color: #fff; border-bottom: 1px solid rgba( 255,255,255, .2 );}
-            #container{ position: absolute; left: 0; top: 0; width: 100%; height: 100%; bottom: 0; background-color: #222; }
-            #options{ position: absolute; right: 0; top: 10px; width: 34em; }
-            #options ul{ list-style-type: none; margin-bottom: .5em; display: inline-block;}
-            #options li{ float: left; margin-right: 4px;}
-            h1{ font-weight: 400; font-size: 16px; margin-bottom: .5em; color: #eee;}
-            p{ margin-bottom: .5em;}
-            b{ font-weight: inherit; color: #ec6e11;}
-            #options div{ float: left;}
-            #title{ position: absolute; left: 10px; top: 10px;}
-            .o{ clear: both; width: 100%; position: relative; }
-            .o p{ position: absolute; right: 10px; top: 0;}
-            .o span{ width: 3em; text-align: right; display: inline-block;}
-            .ui{ pointer-events: auto; opacity: 1; -webkit-transition: opacity 150ms ease-out; transition: opacity 150ms ease-out;}
-            .hidden{ opacity: 0; pointer-events: none;}
-            .button{ padding: .5em 1em; background-color: #ec6e11; border: 1px solid #a64b14; outline: none; border-radius: 4px; color: #fff; font-weight: normal; -webkit-transition: background-color 150ms ease-out; text-shadow: 0 -1px 0 rgba( 70, 31, 8, .5 ); height: 0; line-height: 2.5em; }
-            .button:hover, .button.active{ text-decoration: none; border: 1px solid #a64b14; background-color: #f88c3c;}
-            input[type='checkbox'] + label:before { display: inline-block; width: 1em; color: #666; font-weight: bold; content:"✓"; }
-            input[type='checkbox']:checked + label:before { color: #ec6e11; content:"✓"; }
-            input[type='checkbox'] { display:none; }
+		<div id="container"></div>
+		<div id="title">
+			<h1>rStats · <a href="https://github.com/spite/rstats">GitHub</a></h1>
+			<p>The panel on the left measures this page: the time of each part of the frame, the WebGL calls, what three.js reports and the memory.</p>
+			<p>Click the name of a group to fold it. Move the pointer to see how many of its events arrive per second. Drag to look around, scroll to zoom. Press H to hide the panel.</p>
+		</div>
 
-            @media (max-width: 880px) {
-                #title{ left: 10px; right: 10px;}
-                #title p{ display: none; }
-                #title h1{ width: 100%; text-align: center;}
-                #options{ top: auto; bottom: 10px; left: 50%; width: 34em; margin-left: -17em;}
-            }
+<script type="module">
+import * as THREE from 'three';
+import { rStats } from '../src/rStats.js';
+import { glStats, threeStats, BrowserStats } from '../src/rStats.extras.js';
 
-            @media (max-width: 500px) {
-                #options{ top: auto; bottom: 10px; left: 50%; margin-left: -9em; width: 18em;}
-                .o p b{ display: none;}
-            }
+const container = document.getElementById( 'container' );
 
-        </style>
-    </head>
-    <body>
-        <div id="container" ></div>
+let fov = 120, nfov = 70,
+	lon = 90, nlon = 110,
+	lat = 0, nlat = 17,
+	isUserInteracting = false,
+	onPointerDownPointerX, onPointerDownPointerY, onPointerDownLon, onPointerDownLat;
 
-        </div>
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera( fov, window.innerWidth / window.innerHeight, 10, 1000 );
+camera.position.z = 100;
+scene.add( camera );
 
-<script src="three.min.js"></script>
-<script src="../src/rStats.js"></script>
-<script src="../src/rStats.extras.js"></script>
+const renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.setSize( window.innerWidth, window.innerHeight );
+container.appendChild( renderer.domElement );
 
-<script>
+// a texture that is drawn again on every frame, to have something to measure
+const canvas = document.createElement( 'canvas' );
+canvas.width = 512;
+canvas.height = 512;
+const ctx = canvas.getContext( '2d' );
+const texture = new THREE.CanvasTexture( canvas );
+texture.colorSpace = THREE.SRGBColorSpace;
+const mat = new THREE.MeshBasicMaterial( { map: texture } );
 
-'use strict';
+function r( d ) {
 
-var bS, rS, glS, tS;
-
-var renderer, scene, camera, mesh, fov = 120, nfov = 70,
-container = document.getElementById( 'container' ),
-material, material2,
-onMouseDownMouseX = 0, onMouseDownMouseY = 0,
-lon = 90, nlon = 110, onMouseDownLon = 0,
-lat = 0, nlat = 17, onMouseDownLat = 0,
-phi = 0, theta = 0,
-isUserInteracting = false, isUserPinching = false,
-onPointerDownPointerX, onPointerDownPointerY, onPointerDownLon, onPointerDownLat;
-var perPixelMode = false, currentMaterial;
-var uiElements = Array.prototype.slice.call( document.querySelectorAll( '.ui' ) );
-
-window.addEventListener( 'load', init );
-
-/*
-var c = document.body;
-document.getElementById( 'fullscreenBtn' ).addEventListener( 'click', function( e ) {
-    c.onwebkitfullscreenchange = function(e) {
-        c.onwebkitfullscreenchange = function() {
-        };
-    };
-    c.onmozfullscreenchange = function(e) {
-        c.onmozfullscreenchange = function() {
-        };
-    };
-    if( c.webkitRequestFullScreen ) c.webkitRequestFullScreen();
-    if( c.mozRequestFullScreen ) c.mozRequestFullScreen();
-    e.preventDefault();
-}, false );
-*/
-
-var mat, canvas, ctx;
-
-function init() {
-
-    scene = new THREE.Scene();
-
-    camera = new THREE.PerspectiveCamera( fov, window.innerWidth / window.innerHeight, 10, 1000 );
-    camera.position.z = 100;
-
-    scene.add( camera );
-
-    renderer = new THREE.WebGLRenderer( { antialias: true } );
-    renderer.setSize( window.innerWidth, window.innerHeight );
-
-    container.appendChild( renderer.domElement );
-
-    container.addEventListener( 'mousedown', onMouseDown, false );
-    container.addEventListener( 'mousemove', onMouseMove, false );
-    container.addEventListener( 'mouseup', onMouseUp, false );
-    container.addEventListener( 'mousewheel', onMouseWheel, false );
-    container.addEventListener( 'DOMMouseScroll', onMouseWheel, false);
-    container.addEventListener( 'touchstart', onTouchStart, false );
-    container.addEventListener( 'touchmove', onTouchMove, false );
-    container.addEventListener( 'touchend', onTouchEnd, false );
-    container.addEventListener( 'touchcancel', onTouchEnd, false );
-
-    window.addEventListener( 'resize', onWindowResize, false );
-
-    onWindowResize();
-
-    canvas = document.createElement( 'canvas' );
-    canvas.width = 512;
-    canvas.height = 512;
-    ctx = canvas.getContext( '2d' );
-
-    var texture = new THREE.Texture( canvas );
-//    mat = new THREE.MeshNormalMaterial( { wireframe: false } );
-    mat = new THREE.MeshBasicMaterial( { map: texture } );
-
-    function r( d ){
-        return ( .5 - Math.random() ) * d;
-    }
-
-    var num = 500;
-    var g = new THREE.CubeGeometry( 1, 1, 1 );
-    for( var j = 0; j < num; j++ ) {
-        var m = new THREE.Mesh( g, mat );
-        m.position.set( r( 100 ), r( 100 ), r( 100 ) );
-        m.rotation.set( r( 2 * Math.PI ), r( 2 * Math.PI ), r( 2 * Math.PI ) );
-        m.scale.set( 1 + r( 1 ), 1 + r( 1 ), 1 + r( 1 ) );
-        scene.add( m );
-    }
-
-    var num = 500;
-    var geometry = new THREE.Geometry();
-    for( var j = 0; j < num; j++ ) {
-        var v = new THREE.Vector3( 0, 0, 0 );
-        v.set( r( 100 ), r( 100 ), r( 100 ) );
-        geometry.vertices.push( v );
-    }
-
-    var sprite = THREE.ImageUtils.loadTexture( 'disc.png' );
-
-    var material = new THREE.ParticleSystemMaterial( { size: 3, sizeAttenuation: true, map: sprite, transparent: true } );
-    material.color.setHSL( 1.0, 0.3, 0.7 );
-
-    var particles = new THREE.ParticleSystem( geometry, material );
-    particles.sortParticles = true;
-    scene.add( particles );
-
-    bS = new BrowserStats();
-    glS = new glStats();
-    tS = new threeStats( renderer );
-
-    rS = new rStats( {
-        userTimingAPI: true,
-        values: {
-            frame: { caption: 'Total frame time (ms)', over: 16, average: true, avgMs: 100 },
-            fps: { caption: 'Framerate (FPS)', below: 30 },
-            calls: { caption: 'Calls (three.js)', over: 3000 },
-            raf: { caption: 'Time since last rAF (ms)', average: true, avgMs: 100 },
-            rstats: { caption: 'rStats update (ms)', average: true, avgMs: 100 },
-            texture: { caption: 'GenTex', average: true, avgMs: 100 }
-        },
-        groups: [
-            { caption: 'Framerate', values: [ 'fps', 'raf' ] },
-            { caption: 'Frame Budget', values: [ 'frame', 'texture', 'setup', 'render' ] }
-        ],
-        fractions: [
-            { base: 'frame', steps: [ 'texture', 'setup', 'render' ] }
-        ],
-        plugins: [
-            bS,
-            tS,
-            glS
-        ]
-    } );
-
-    render();
+	return ( .5 - Math.random() ) * d;
 
 }
+
+const num = 500;
+const g = new THREE.BoxGeometry( 1, 1, 1 );
+for ( let j = 0; j < num; j ++ ) {
+
+	const m = new THREE.Mesh( g, mat );
+	m.position.set( r( 100 ), r( 100 ), r( 100 ) );
+	m.rotation.set( r( 2 * Math.PI ), r( 2 * Math.PI ), r( 2 * Math.PI ) );
+	m.scale.set( 1 + r( 1 ), 1 + r( 1 ), 1 + r( 1 ) );
+	scene.add( m );
+
+}
+
+const positions = [];
+for ( let j = 0; j < num; j ++ ) positions.push( r( 100 ), r( 100 ), r( 100 ) );
+
+const geometry = new THREE.BufferGeometry();
+geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+
+const sprite = new THREE.TextureLoader().load( 'disc.png' );
+sprite.colorSpace = THREE.SRGBColorSpace;
+const material = new THREE.PointsMaterial( { size: 3, sizeAttenuation: true, map: sprite, transparent: true, depthWrite: false } );
+material.color.setHSL( 1.0, 0.3, 0.7 );
+scene.add( new THREE.Points( geometry, material ) );
+
+const bS = new BrowserStats();
+const glS = new glStats();
+const tS = new threeStats( renderer );
+
+const rS = new rStats( {
+	css: [ 'https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' ],
+	userTimingAPI: true,
+	values: {
+		frame: { caption: 'Total frame time (ms)', over: 16, average: true, avgMs: 100 },
+		fps: { caption: 'Framerate (FPS)', below: 30 },
+		raf: { caption: 'Time since rAF (ms)', average: true, avgMs: 100 },
+		moves: { caption: 'Pointer moves / s' },
+		rstats: { caption: 'rStats update (ms)', average: true, avgMs: 100 },
+		texture: { caption: 'GenTex', average: true, avgMs: 100 },
+		setup: { caption: 'Setup', average: true, avgMs: 100 },
+		render: { caption: 'Render', average: true, avgMs: 100 }
+	},
+	groups: [
+		{ caption: 'Framerate', values: [ 'fps', 'raf' ] },
+		{ caption: 'Input', values: [ 'moves' ] },
+		{ caption: 'Frame Budget', values: [ 'frame', 'texture', 'setup', 'render' ] }
+	],
+	fractions: [
+		{ base: 'frame', steps: [ 'texture', 'setup', 'render' ] }
+	],
+	plugins: [
+		bS,
+		tS,
+		glS
+	]
+} );
 
 function onWindowResize() {
-    var s = 1;
-    renderer.setSize( s * window.innerWidth, s * window.innerHeight );
-    camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
-}
 
-function onMouseWheel( event ) {
-
-    // WebKit
-
-    if ( event.wheelDeltaY ) {
-
-        nfov -= event.wheelDeltaY * 0.01;
-
-    // Opera / Explorer 9
-
-    } else if ( event.wheelDelta ) {
-
-        nfov -= event.wheelDelta * 0.05;
-
-    // Firefox
-
-    } else if ( event.detail ) {
-
-        nfov += event.detail * 1.0;
-
-    }
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	camera.aspect = window.innerWidth / window.innerHeight;
 
 }
 
-function onMouseDown( event ) {
+container.addEventListener( 'pointerdown', function ( event ) {
 
-    uiElements.forEach( function( e ) { e.classList.add( 'hidden' ); } );
-    event.preventDefault();
+	if ( ! event.isPrimary ) return;
 
-    isUserInteracting = true;
+	event.preventDefault();
+	container.setPointerCapture( event.pointerId );
+	isUserInteracting = true;
+	onPointerDownPointerX = event.clientX;
+	onPointerDownPointerY = event.clientY;
+	onPointerDownLon = lon;
+	onPointerDownLat = lat;
 
-    onPointerDownPointerX = event.clientX;
-    onPointerDownPointerY = event.clientY;
+} );
 
-    onPointerDownLon = lon;
-    onPointerDownLat = lat;
+container.addEventListener( 'pointermove', function ( event ) {
 
-}
+	if ( ! isUserInteracting || ! event.isPrimary ) return;
 
-function onMouseMove( event ) {
+	nlon = ( event.clientX - onPointerDownPointerX ) * 0.1 + onPointerDownLon;
+	nlat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
 
-    if ( isUserInteracting ) {
+} );
 
-        nlon = ( event.clientX - onPointerDownPointerX ) * 0.1 + onPointerDownLon;
-        nlat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
+function onPointerUp() {
 
-    }
-
-}
-
-function onMouseUp( event ) {
-
-    uiElements.forEach( function( e ) { e.classList.remove( 'hidden' ); } );
-    isUserInteracting = false;
+	isUserInteracting = false;
 
 }
 
-var oDist = 0, oFov;
+container.addEventListener( 'pointerup', onPointerUp );
+container.addEventListener( 'pointercancel', onPointerUp );
+container.style.touchAction = 'none';
 
-function onTouchStart( event ) {
+container.addEventListener( 'wheel', function ( event ) {
 
-    uiElements.forEach( function( e ) { e.classList.add( 'hidden' ); } );
+	event.preventDefault();
+	nfov += event.deltaY * 0.02;
 
-    event.preventDefault();
+}, { passive: false } );
 
-    if( event.touches.length == 2 ) {
+let hidden = false;
+window.addEventListener( 'keydown', function ( event ) {
 
-        var t = event.touches;
-        oDist = Math.sqrt(
-                Math.pow( t[ 0 ].clientX - t[ 1 ].clientX, 2 ) +
-                Math.pow( t[ 0 ].clientY - t[ 1 ].clientY, 2 ) );
-        oFov = nfov;
+	if ( event.key !== 'h' && event.key !== 'H' ) return;
 
-        isUserPinching = true;
+	hidden = ! hidden;
+	if ( hidden ) rS().hide(); else rS().show();
 
-    } else {
+} );
 
-        var t = event.touches[ 0 ];
-        isUserInteracting = true;
+// counts the events of the pointer, wherever it is. The first call creates the counter
+rS( 'moves' ).mark( 0 );
 
-        onPointerDownPointerX = t.clientX;
-        onPointerDownPointerY = t.clientY;
+window.addEventListener( 'pointermove', function () {
 
-        onPointerDownLon = lon;
-        onPointerDownLat = lat;
+	rS( 'moves' ).mark();
 
-    }
+} );
 
-}
-
-function onTouchMove( event ) {
-
-    if( event.touches.length == 2 ) {
-
-        var t = event.touches;
-        var dist = Math.sqrt(
-                Math.pow( t[ 0 ].clientX - t[ 1 ].clientX, 2 ) +
-                Math.pow( t[ 0 ].clientY - t[ 1 ].clientY, 2 ) );
-
-        nfov = oFov + .1 * ( oDist - dist );
-
-    } else {
-
-        var t = event.touches[ 0 ];
-        nlon = ( t.clientX - onPointerDownPointerX ) * 0.1 + onPointerDownLon;
-        nlat = ( t.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
-
-    }
-
-}
-
-function onTouchEnd( event ) {
-
-    uiElements.forEach( function( e ) { e.classList.remove( 'hidden' ); } );
-
-    isUserInteracting = false;
-    isUserPinching = false;
-
-}
-
-var perfTime, prevPerfTime = performance.now();
-var startTime = Date.now();
+window.addEventListener( 'resize', onWindowResize );
+onWindowResize();
 
 function render() {
 
-    rS( 'frame' ).start();
-    glS.start();
+	rS( 'frame' ).start();
+	glS.start();
 
-    rS( 'rAF' ).tick();
-    rS( 'FPS' ).frame();
+	rS( 'rAF' ).tick();
+	rS( 'FPS' ).frame();
 
-    rS( 'texture' ).start();
-    var m = 10;// + 3000 * Math.sin( .001 * Date.now() );
-    for( var j = 0; j < m; j++ ) {
-        ctx.fillStyle = '#'+Math.floor(Math.random()*16777215).toString(16);
-        var x = Math.random() * canvas.width,
-            y = Math.random() * canvas.height,
-            w = Math.random() * canvas.width,
-            h = Math.random() * canvas.height;
-        ctx.fillRect( x, y, w, h );
-    }
-    mat.map.needsUpdate = true;
-    rS( 'texture' ).end();
+	rS( 'texture' ).start();
+	for ( let j = 0; j < 10; j ++ ) {
 
-    rS( 'setup' ).start();
+		ctx.fillStyle = '#' + Math.floor( Math.random() * 16777215 ).toString( 16 ).padStart( 6, '0' );
+		const x = Math.random() * canvas.width,
+			y = Math.random() * canvas.height,
+			w = Math.random() * canvas.width,
+			h = Math.random() * canvas.height;
+		ctx.fillRect( x, y, w, h );
 
-    if( nfov < 1 ) nfov = 1;
-    if( nfov > 150 ) nfov = 150;
+	}
 
-    lon += ( nlon - lon ) * .2;
-    lat += ( nlat - lat ) * .2;
-    fov += ( nfov - fov ) * .2;
+	texture.needsUpdate = true;
+	rS( 'texture' ).end();
 
-    camera.projectionMatrix.makePerspective( fov, window.innerWidth / window.innerHeight, camera.near, camera.far );
+	rS( 'setup' ).start();
+	nfov = Math.max( 1, Math.min( 150, nfov ) );
 
-    lat = Math.max( - 85, Math.min( 85, lat ) );
-    phi = ( 90 - lat ) * Math.PI / 180;
-    theta = lon * Math.PI / 180;
+	lon += ( nlon - lon ) * .2;
+	lat += ( nlat - lat ) * .2;
+	fov += ( nfov - fov ) * .2;
+	camera.fov = fov;
+	camera.updateProjectionMatrix();
 
-    camera.position.x = 100 * Math.sin( phi ) * Math.cos( theta );
-    camera.position.y = 100 * Math.cos( phi );
-    camera.position.z = 100 * Math.sin( phi ) * Math.sin( theta );
+	lat = Math.max( - 85, Math.min( 85, lat ) );
+	const phi = ( 90 - lat ) * Math.PI / 180;
+	const theta = lon * Math.PI / 180;
 
-    camera.lookAt( scene.position );
+	camera.position.x = 100 * Math.sin( phi ) * Math.cos( theta );
+	camera.position.y = 100 * Math.cos( phi );
+	camera.position.z = 100 * Math.sin( phi ) * Math.sin( theta );
+	camera.lookAt( scene.position );
+	rS( 'setup' ).end();
 
-    rS( 'setup' ).end();
+	rS( 'render' ).start();
+	renderer.render( scene, camera );
+	rS( 'render' ).end();
 
-    rS( 'render' ).start();
-    renderer.render( scene, camera );
-    rS( 'render' ).end();
+	rS( 'frame' ).end();
 
-    rS( 'frame' ).end();
+	rS( 'rStats' ).start();
+	rS().update();
+	rS( 'rStats' ).end();
 
-    /*rS( 'memory.limit' ).set( performance.memory.jsHeapSizeLimit );
-    rS( 'memory.used' ).set( performance.memory.usedJSHeapSize );
-    rS( 'memory.total' ).set( performance.memory.totalJSHeapSize );*/
-
-    rS( 'rStats' ).start();
-    rS().update();
-    rS( 'rStats' ).end();
-
-    requestAnimationFrame( render );
+	requestAnimationFrame( render );
 
 }
 
+render();
 </script>
 
-    </body>
+	</body>
 </html>

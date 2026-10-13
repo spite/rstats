@@ -1,265 +1,321 @@
-window.glStats = function () {
-
-    var _rS = null;
-
-    var _totalDrawArraysCalls = 0,
-        _totalDrawElementsCalls = 0,
-        _totalUseProgramCalls = 0,
-        _totalFaces = 0,
-        _totalVertices = 0,
-        _totalPoints = 0,
-        _totalBindTexures = 0;
-
-    function _h ( f, c ) {
-        return function () {
-            c.apply( this, arguments );
-            f.apply( this, arguments );
-        };
-    }
-
-    WebGLRenderingContext.prototype.drawArrays = _h( WebGLRenderingContext.prototype.drawArrays, function () {
-        _totalDrawArraysCalls++;
-        if ( arguments[ 0 ] == this.POINTS ) _totalPoints += arguments[ 2 ];
-        else _totalVertices += arguments[ 2 ];
-    } );
-
-    WebGLRenderingContext.prototype.drawElements = _h( WebGLRenderingContext.prototype.drawElements, function () {
-        _totalDrawElementsCalls++;
-        _totalFaces += arguments[ 1 ] / 3;
-        _totalVertices += arguments[ 1 ];
-    } );
-
-    WebGLRenderingContext.prototype.useProgram = _h( WebGLRenderingContext.prototype.useProgram, function () {
-        _totalUseProgramCalls++;
-    } );
-
-    WebGLRenderingContext.prototype.bindTexture = _h( WebGLRenderingContext.prototype.bindTexture, function () {
-        _totalBindTexures++;
-    } );
-
-    var _values = {
-        allcalls: {
-            over: 3000,
-            caption: 'Calls (hook)'
-        },
-        drawelements: {
-            caption: 'drawElements (hook)'
-        },
-        drawarrays: {
-            caption: 'drawArrays (hook)'
-        }
-    };
-
-    var _groups = [ {
-        caption: 'WebGL',
-        values: [ 'allcalls', 'drawelements', 'drawarrays', 'useprogram', 'bindtexture', 'glfaces', 'glvertices', 'glpoints' ]
-    } ];
-
-    var _fractions = [ {
-        base: 'allcalls',
-        steps: [ 'drawelements', 'drawarrays' ]
-    } ];
-
-    function _update () {
-        _rS( 'allcalls' ).set( _totalDrawArraysCalls + _totalDrawElementsCalls );
-        _rS( 'drawElements' ).set( _totalDrawElementsCalls );
-        _rS( 'drawArrays' ).set( _totalDrawArraysCalls );
-        _rS( 'bindTexture' ).set( _totalBindTexures );
-        _rS( 'useProgram' ).set( _totalUseProgramCalls );
-        _rS( 'glfaces' ).set( _totalFaces );
-        _rS( 'glvertices' ).set( _totalVertices );
-        _rS( 'glpoints' ).set( _totalPoints );
-    }
-
-    function _start () {
-        _totalDrawArraysCalls = 0;
-        _totalDrawElementsCalls = 0;
-        _totalUseProgramCalls = 0;
-        _totalFaces = 0;
-        _totalVertices = 0;
-        _totalPoints = 0;
-        _totalBindTexures = 0;
-    }
-
-    function _end () {}
-
-    function _attach ( r ) {
-        _rS = r;
-    }
-
-    return {
-        update: _update,
-        start: _start,
-        end: _end,
-        attach: _attach,
-        values: _values,
-        groups: _groups,
-        fractions: _fractions
-    };
-
+const _gl = {
+	drawArraysCalls: 0,
+	drawElementsCalls: 0,
+	useProgramCalls: 0,
+	bindTextures: 0,
+	faces: 0,
+	vertices: 0,
+	points: 0
 };
 
-window.threeStats = function ( renderer ) {
+let _hooked = false;
 
-    var _rS = null;
+function _h( f, c ) {
 
-    var _values = {
-        'renderer.info.memory.geometries': {
-            caption: 'Geometries'
-        },
-        'renderer.info.memory.textures': {
-            caption: 'Textures'
-        },
-        'renderer.info.programs': {
-            caption: 'Programs'
-        },
-        'renderer.info.render.calls': {
-            caption: 'Calls'
-        },
-        'renderer.info.render.faces': {
-            caption: 'Faces',
-            over: 1000
-        },
-        'renderer.info.render.points': {
-            caption: 'Points'
-        },
-        'renderer.info.render.vertices': {
-            caption: 'Vertices'
-        }
-    };
+	return function () {
 
-    var _groups = [ {
-        caption: 'Three.js - Memory',
-        values: [ 'renderer.info.memory.geometries', 'renderer.info.programs', 'renderer.info.memory.textures' ]
-    }, {
-        caption: 'Three.js - Render',
-        values: [ 'renderer.info.render.calls', 'renderer.info.render.faces', 'renderer.info.render.points', 'renderer.info.render.vertices' ]
-    } ];
+		c.apply( this, arguments );
+		return f.apply( this, arguments );
 
-    var _fractions = [];
+	};
 
-    function _update () {
+}
 
-        _rS( 'renderer.info.memory.geometries' ).set( renderer.info.memory.geometries );
-        //_rS( 'renderer.info.programs' ).set( renderer.info.programs.length );
-        _rS( 'renderer.info.memory.textures' ).set( renderer.info.memory.textures );
-        _rS( 'renderer.info.render.calls' ).set( renderer.info.render.calls );
-        _rS( 'renderer.info.render.faces' ).set( renderer.info.render.faces );
-        _rS( 'renderer.info.render.points' ).set( renderer.info.render.points );
-        _rS( 'renderer.info.render.vertices' ).set( renderer.info.render.vertices );
+function _count( gl, mode, count, instances ) {
 
-    }
+	if ( mode === gl.POINTS ) _gl.points += count * instances;
+	else _gl.vertices += count * instances;
 
-    function _start () {}
+	if ( mode === gl.TRIANGLES ) _gl.faces += Math.floor( count / 3 ) * instances;
+	else if ( mode === gl.TRIANGLE_STRIP || mode === gl.TRIANGLE_FAN ) _gl.faces += Math.max( 0, count - 2 ) * instances;
 
-    function _end () {}
+}
 
-    function _attach ( r ) {
-        _rS = r;
-    }
+// the hooks are added once, to the contexts of WebGL 1 and WebGL 2
+function _hook() {
 
-    return {
-        update: _update,
-        start: _start,
-        end: _end,
-        attach: _attach,
-        values: _values,
-        groups: _groups,
-        fractions: _fractions
-    };
+	if ( _hooked ) return;
+	_hooked = true;
 
-};
+	const arrays = {
+		drawArrays: a => [ a[ 0 ], a[ 2 ], 1 ],
+		drawArraysInstanced: a => [ a[ 0 ], a[ 2 ], a[ 3 ] ]
+	};
+
+	const elements = {
+		drawElements: a => [ a[ 0 ], a[ 1 ], 1 ],
+		drawElementsInstanced: a => [ a[ 0 ], a[ 1 ], a[ 4 ] ],
+		drawRangeElements: a => [ a[ 0 ], a[ 3 ], 1 ]
+	};
+
+	for ( const name of [ 'WebGLRenderingContext', 'WebGL2RenderingContext' ] ) {
+
+		if ( globalThis[ name ] === undefined ) continue;
+
+		const proto = globalThis[ name ].prototype;
+
+		for ( const method in arrays ) {
+
+			if ( proto[ method ] === undefined ) continue;
+
+			proto[ method ] = _h( proto[ method ], function () {
+
+				_gl.drawArraysCalls ++;
+				_count( this, ...arrays[ method ]( arguments ) );
+
+			} );
+
+		}
+
+		for ( const method in elements ) {
+
+			if ( proto[ method ] === undefined ) continue;
+
+			proto[ method ] = _h( proto[ method ], function () {
+
+				_gl.drawElementsCalls ++;
+				_count( this, ...elements[ method ]( arguments ) );
+
+			} );
+
+		}
+
+		proto.useProgram = _h( proto.useProgram, function () {
+
+			_gl.useProgramCalls ++;
+
+		} );
+
+		proto.bindTexture = _h( proto.bindTexture, function () {
+
+			_gl.bindTextures ++;
+
+		} );
+
+	}
+
+}
+
+function glStats() {
+
+	let _rS = null;
+
+	_hook();
+
+	const _values = {
+		allcalls: {
+			over: 3000,
+			caption: 'Calls (hook)'
+		},
+		drawelements: {
+			caption: 'drawElements (hook)'
+		},
+		drawarrays: {
+			caption: 'drawArrays (hook)'
+		}
+	};
+
+	const _groups = [ {
+		caption: 'WebGL',
+		values: [ 'allcalls', 'drawelements', 'drawarrays', 'useprogram', 'bindtexture', 'glfaces', 'glvertices', 'glpoints' ]
+	} ];
+
+	const _fractions = [ {
+		base: 'allcalls',
+		steps: [ 'drawelements', 'drawarrays' ]
+	} ];
+
+	function _update() {
+
+		_rS( 'allcalls' ).set( _gl.drawArraysCalls + _gl.drawElementsCalls );
+		_rS( 'drawElements' ).set( _gl.drawElementsCalls );
+		_rS( 'drawArrays' ).set( _gl.drawArraysCalls );
+		_rS( 'bindTexture' ).set( _gl.bindTextures );
+		_rS( 'useProgram' ).set( _gl.useProgramCalls );
+		_rS( 'glfaces' ).set( _gl.faces );
+		_rS( 'glvertices' ).set( _gl.vertices );
+		_rS( 'glpoints' ).set( _gl.points );
+
+	}
+
+	function _start() {
+
+		for ( const key in _gl ) _gl[ key ] = 0;
+
+	}
+
+	function _end() {}
+
+	function _attach( r ) {
+
+		_rS = r;
+
+	}
+
+	return {
+		update: _update,
+		start: _start,
+		end: _end,
+		attach: _attach,
+		values: _values,
+		groups: _groups,
+		fractions: _fractions
+	};
+
+}
+
+function threeStats( renderer ) {
+
+	let _rS = null;
+
+	const _values = {
+		'renderer.info.memory.geometries': {
+			caption: 'Geometries'
+		},
+		'renderer.info.memory.textures': {
+			caption: 'Textures'
+		},
+		'renderer.info.programs': {
+			caption: 'Programs'
+		},
+		'renderer.info.render.calls': {
+			caption: 'Calls'
+		},
+		'renderer.info.render.triangles': {
+			caption: 'Triangles'
+		},
+		'renderer.info.render.points': {
+			caption: 'Points'
+		},
+		'renderer.info.render.lines': {
+			caption: 'Lines'
+		}
+	};
+
+	const _groups = [ {
+		caption: 'Three.js - Memory',
+		values: [ 'renderer.info.memory.geometries', 'renderer.info.programs', 'renderer.info.memory.textures' ]
+	}, {
+		caption: 'Three.js - Render',
+		values: [ 'renderer.info.render.calls', 'renderer.info.render.triangles', 'renderer.info.render.points', 'renderer.info.render.lines' ]
+	} ];
+
+	const _fractions = [];
+
+	function _update() {
+
+		const info = renderer.info;
+
+		// WebGPURenderer counts the draw calls apart from the calls to render()
+		const calls = info.render.drawCalls !== undefined ? info.render.drawCalls : info.render.calls;
+
+		_rS( 'renderer.info.memory.geometries' ).set( info.memory.geometries || 0 );
+		_rS( 'renderer.info.programs' ).set( info.programs ? info.programs.length : 0 );
+		_rS( 'renderer.info.memory.textures' ).set( info.memory.textures || 0 );
+		_rS( 'renderer.info.render.calls' ).set( calls || 0 );
+		_rS( 'renderer.info.render.triangles' ).set( info.render.triangles || 0 );
+		_rS( 'renderer.info.render.points' ).set( info.render.points || 0 );
+		_rS( 'renderer.info.render.lines' ).set( info.render.lines || 0 );
+
+	}
+
+	function _start() {}
+
+	function _end() {}
+
+	function _attach( r ) {
+
+		_rS = r;
+
+	}
+
+	return {
+		update: _update,
+		start: _start,
+		end: _end,
+		attach: _attach,
+		values: _values,
+		groups: _groups,
+		fractions: _fractions
+	};
+
+}
 
 /*
  *   From https://github.com/paulirish/memory-stats.js
  */
 
-window.BrowserStats = function () {
+function BrowserStats() {
 
-    var _rS = null;
+	let _rS = null;
 
-    var _usedJSHeapSize = 0,
-        _totalJSHeapSize = 0;
+	let memory = {
+		usedJSHeapSize: 0,
+		totalJSHeapSize: 0
+	};
 
-    var memory = {
-        usedJSHeapSize: 0,
-        totalJSHeapSize: 0
-    };
+	if ( globalThis.performance && performance.memory ) memory = performance.memory;
 
-    if ( window.performance && performance.memory )
-        memory = performance.memory;
+	if ( memory.totalJSHeapSize === 0 ) {
 
-    if ( memory.totalJSHeapSize === 0 ) {
-        console.warn( 'totalJSHeapSize === 0... performance.memory is only available in Chrome .' );
-    }
+		console.warn( 'totalJSHeapSize === 0... performance.memory is only available in Chrome .' );
 
-    var _values = {
-        memory: {
-            caption: 'Used Memory',
-            average: true,
-            avgMs: 1000,
-            over: 22
-        },
-        total: {
-            caption: 'Total Memory'
-        }
-    };
+	}
 
-    var _groups = [ {
-        caption: 'Browser',
-        values: [ 'memory', 'total' ]
-    } ];
+	const _values = {
+		memory: {
+			caption: 'Used Memory (MB)',
+			average: true,
+			avgMs: 1000
+		},
+		total: {
+			caption: 'Total Memory (MB)'
+		}
+	};
 
-    var _fractions = [ {
-        base: 'total',
-        steps: [ 'memory' ]
-    } ];
+	const _groups = [ {
+		caption: 'Browser',
+		values: [ 'memory', 'total' ]
+	} ];
 
-    var log1024 = Math.log( 1024 );
+	const _fractions = [ {
+		base: 'total',
+		steps: [ 'memory' ]
+	} ];
 
-    function _size ( v ) {
+	function _size( v ) {
 
-        var precision = 100; //Math.pow(10, 2);
-        var i = Math.floor( Math.log( v ) / log1024 );
-        if( v === 0 ) i = 1;
-        return Math.round( v * precision / Math.pow( 1024, i ) ) / precision; // + ' ' + sizes[i];
+		return Math.round( v * 100 / 1048576 ) / 100;
 
-    }
+	}
 
-    function _update () {
-        _usedJSHeapSize = _size( memory.usedJSHeapSize );
-        _totalJSHeapSize = _size( memory.totalJSHeapSize );
+	function _update() {
 
-        _rS( 'memory' ).set( _usedJSHeapSize );
-        _rS( 'total' ).set( _totalJSHeapSize );
-    }
+		_rS( 'memory' ).set( _size( memory.usedJSHeapSize ) );
+		_rS( 'total' ).set( _size( memory.totalJSHeapSize ) );
 
-    function _start () {
-        _usedJSHeapSize = 0;
-    }
+	}
 
-    function _end () {}
+	function _start() {}
 
-    function _attach ( r ) {
-        _rS = r;
-    }
+	function _end() {}
 
-    return {
-        update: _update,
-        start: _start,
-        end: _end,
-        attach: _attach,
-        values: _values,
-        groups: _groups,
-        fractions: _fractions
-    };
+	function _attach( r ) {
 
-};
+		_rS = r;
 
-if (typeof module === 'object') {
-  module.exports = {
-    glStats: window.glStats,
-    threeStats: window.threeStats,
-    BrowserStats: window.BrowserStats
-  };
+	}
+
+	return {
+		update: _update,
+		start: _start,
+		end: _end,
+		attach: _attach,
+		values: _values,
+		groups: _groups,
+		fractions: _fractions
+	};
+
 }
+
+export { glStats, threeStats, BrowserStats };
