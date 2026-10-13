@@ -1,487 +1,264 @@
 <!doctype html>
 <html lang="en">
-<head>
-	<meta charset="utf-8">
-	<title>rStats - Introduction and demos</title>
-	<meta name="description" content="rStats: measure and plot the time of each part of your update loop">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="color-scheme" content="light dark">
-	<style>
-		:root{ --text: #24292f; --background: #ffffff; --link: #0969da; --border: #d0d7de; --muted: #57606a; --code: rgba( 175, 184, 193, .2 ); --pre: #f6f8fa; --comment: #6e7781; --strong: #cf222e; }
-		@media ( prefers-color-scheme: dark ) {
-			:root{ --text: #e6edf3; --background: #0d1117; --link: #58a6ff; --border: #30363d; --muted: #8b949e; --code: rgba( 110, 118, 129, .4 ); --pre: #161b22; --comment: #8b949e; --strong: #ff7b72; }
+	<head>
+		<meta charset="utf-8">
+		<title>rStats demo</title>
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			*{ box-sizing: border-box; margin: 0; padding: 0 }
+			body {
+				color: #ddd;
+				font-family: 'Roboto Condensed', tahoma, sans-serif;
+				font-size: 13px;
+				background-color: #222;
+				overflow: hidden;
+				line-height: 1.4em;
+			}
+			a{ color: #ec6e11; font-weight: bold; text-decoration: none; border-bottom: 1px solid rgba( 236, 110, 17, .2 ); transition: color 150ms ease-out, border-color 150ms ease-out; }
+			a:hover{ color: #fff; border-bottom: 1px solid rgba( 255,255,255, .2 );}
+			#container{ position: absolute; left: 0; top: 0; width: 100%; height: 100%; bottom: 0; background-color: #222; }
+			#title{ position: absolute; right: 10px; bottom: 10px; text-align: right; background-color: rgba( 34, 34, 34, .8 ); padding: 10px; }
+			h1{ font-weight: 400; font-size: 16px; margin-bottom: .5em; color: #eee;}
+			p{ margin-bottom: .5em;}
+		</style>
+		<script type="importmap">
+		{
+			"imports": {
+				"three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"
+			}
 		}
-		*{ box-sizing: border-box; }
-		body{ margin: 0; padding: 32px 16px 64px; color: var( --text ); background-color: var( --background ); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.5; }
-		main{ max-width: 800px; margin: 0 auto; }
-		a{ color: var( --link ); text-decoration: none; }
-		a:hover{ text-decoration: underline; }
-		main > h1{ font-size: 2em; margin: 0 0 16px; padding-bottom: .3em; border-bottom: 1px solid var( --border ); }
-		main > h2{ font-size: 1.5em; margin: 40px 0 16px; padding-bottom: .3em; border-bottom: 1px solid var( --border ); }
-		p, ul{ margin: 0 0 16px; }
-		ul{ padding-left: 2em; }
-		li{ margin-bottom: 4px; }
-		li i, .note{ color: var( --muted ); }
-		code{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 85%; padding: .2em .4em; border-radius: 6px; background-color: var( --code ); }
-		pre{ margin: 0 0 16px; padding: 16px; overflow: auto; border-radius: 6px; background-color: var( --pre ); font-size: 85%; line-height: 1.45; tab-size: 2; }
-		pre code{ padding: 0; background: none; font-size: 100%; }
-		pre .c{ color: var( --comment ); }
-		pre b{ color: var( --strong ); font-weight: 600; }
-		img.header{ display: block; width: 100%; border-radius: 6px; margin-bottom: 16px; }
-		.buttons{ display: flex; flex-wrap: wrap; gap: 8px; }
-		.button, button{ display: inline-block; padding: 5px 16px; border: 1px solid var( --border ); border-radius: 6px; background-color: var( --pre ); color: var( --text ); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
-		.button:hover, button:hover{ text-decoration: none; border-color: var( --muted ); }
-		.button.primary{ background-color: #1f883d; border-color: #1f883d; color: #fff; }
-		button.on{ background-color: #b70000; border-color: #b70000; color: #fff; }
+		</script>
+	</head>
+	<body>
 
-		/* an example: the panel of rStats, in the page instead of over it */
-		.example{ margin: 0 0 16px; border: 1px solid var( --border ); border-radius: 6px; overflow: hidden; background-color: #222; display: flex; flex-wrap: wrap; }
-		.example .rs-base{ position: relative; max-width: 100%; flex: none; }
-		.example .side{ flex: 1; min-width: 200px; position: relative; display: flex; align-items: flex-end; justify-content: flex-end; padding: 10px; gap: 8px; }
-		.example canvas.scene{ position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
-		.example .side button{ position: relative; background-color: #333; border-color: #555; color: #eee; }
-		.example .side button.on{ background-color: #b70000; border-color: #b70000; }
-		.example .side p{ position: relative; margin: 0; color: #aaa; font-size: 13px; text-align: right; }
-	</style>
-	<script type="importmap">
-	{
-		"imports": {
-			"three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"
-		}
-	}
-	</script>
-</head>
-<body>
-<main>
+		<div id="container"></div>
+		<div id="title">
+			<h1>rStats · <a href="../">Introduction</a> · <a href="https://github.com/spite/rstats">GitHub</a></h1>
+			<p>The panel on the left measures this page: the time of each part of the frame, the WebGL calls, what three.js reports and the memory.</p>
+			<p>Click the name of a group to fold it. Move the pointer to see how many of its events arrive per second. Drag to look around, scroll to zoom. Press H to hide the panel.</p>
+		</div>
 
-	<h1>rStats</h1>
-	<img class="header" src="header.jpg" alt="rStats">
-	<p>rStats aims to provide a way of measuring and visualizing performance of your code, mainly in apps based on an update loop, like games or interactive experiences.</p>
-	<p class="buttons">
-		<a class="button primary" href="scene.html">Run the demo</a>
-		<a class="button" href="https://github.com/spite/rstats">GitHub</a>
-		<a class="button" href="https://www.npmjs.com/package/rstatsjs">npm</a>
-	</p>
-
-	<h2>Welcome!</h2>
-	<p>It came to be when coding the <a href="https://www.clicktorelease.com/code/bumpy-metaballs/">Bumpy metaballs</a> and SnowBox. I realised that the performance monitors I was using (the <i>de facto</i> standard <a href="https://github.com/mrdoob/stats.js/">mrdoob stats.js</a> and the DevTools FPS Meter) are useful to keep an eye on your framerate and check if you're dropping frames. But once you're doing great and keeping it under 16ms, how much are you really using? Is my shader executing in 15.99ms, or is it a way smaller fraction of the frame time? Can I have an idea of how much headroom I still have left?</p>
-	<p>So rStats started as a revamp of the original stats performance monitor, adding <code>performance.now()</code> for finer measuring. After the naive measuring, I started adding more features. It takes after <a href="https://github.com/mrdoob/stats.js/">mrdoob stats.js</a>, <a href="https://github.com/jeromeetienne/threex.rendererstats">Jerome Etienne's threex.rendererstats</a> and <a href="http://benvanik.github.io/WebGL-Inspector/">Ben Vanik's WebGL Inspector</a>.</p>
-	<p class="note">This page is from 2014, updated in 2026 for version 2 of the library. Every example below is rStats running live in this page, and only the ones on screen are running.</p>
-
-	<h2>Let's get started</h2>
-	<p>Install it with npm, or get <code>src/rStats.js</code> from the repository. It's a plain ES module.</p>
-	<pre><code>npm i rstatsjs</code></pre>
-	<pre><code>import { rStats } from 'rstatsjs';
-
-const rS = new rStats();</code></pre>
-	<p>This is the simplest way of creating an rStats object. Using it is as simple as placing the elements you'd like to measure in your update/render method:</p>
-	<pre><code>function render() {
-
-  rS( 'frame' ).start();
-
-  <span class="c">/* Do rendery stuff */</span>
-
-  rS( 'frame' ).end();
-  rS().update();
-
-  requestAnimationFrame( render );
-
-}</code></pre>
-	<div class="example" id="example1"></div>
-	<p>Notice that the value for <code>frame</code> is ~0. Since we're not doing anything in the function, it's exactly what we should expect. The graphs slowly accommodate to the max value: the scale grows and shrinks over time to adjust the vertical axis.</p>
-	<p><code>rS()</code> returns the rStats object directly, and has an <code>update()</code> method that redraws the panel. Call this method at the end of your update function. <code>rS( id )</code> returns a counter object. A counter has six updating methods:</p>
-	<ul>
-		<li><b>start()</b>: starts counting performance time.</li>
-		<li><b>end()</b>: stops counting performance time and stores the ellapsed time since <b>start()</b> was called.<br><i>Good to measure render or texture update time.</i></li>
-		<li><b>tick()</b>: stores the ellapsed time since <b>tick()</b> was last called. It's a shortcut for <b>end(); start();</b><br><i>Good to measure times of loops or time between calls.</i></li>
-		<li><b>frame()</b>: counts a frame, and stores the frames per second once every second.<br><i>Good for ... well, framerate, for instance.</i></li>
-		<li><b>set( v )</b>: stores the specified value.<br><i>Good to store specific values, like draw calls or memory size.</i></li>
-		<li><b>mark( n )</b>: counts something that happened, and stores how many per second once every second.<br><i>Good for things that don't follow the update loop, like collisions or messages from a worker.</i></li>
-	</ul>
-	<p>Additionally, <code>value()</code> returns the current value of the counter.</p>
-	<p>Let's see a more extensive example:</p>
-	<pre><code>function render() {
-
-  rS( 'frame' ).start();
-  rS( 'rAF' ).tick();
-  rS( 'FPS' ).frame();
-
-  rS( 'action1' ).start();
-  <span class="c">/* Perform action #1 */</span>
-  rS( 'action1' ).end();
-
-  rS( 'render' ).start();
-  <span class="c">/* Perform render */</span>
-  rS( 'render' ).end();
-
-  rS( 'frame' ).end();
-  rS().update();
-
-  requestAnimationFrame( render );
-
-}</code></pre>
-	<div class="example" id="example2"></div>
-	<p>In this example, we're using</p>
-	<ul>
-		<li><b>rS( 'frame' ).start()/end()</b> to measure the actual execution time of our render method</li>
-		<li><b>rS( 'rAF' ).tick()</b> to measure how close to 16ms our requestAnimationFrame callbacks are being triggered</li>
-		<li><b>rS( 'FPS' ).frame()</b> to count the framerate (it's directly related to the rAF value, but we can calculate it independently)</li>
-		<li><b>rS( 'action1' ).start()/end()</b> and <b>rS( 'render' ).start()/end()</b> to measure execution time of those parts of the render</li>
-	</ul>
-	<p>That's it. With these examples you can add all the counters you want and measure performance for anything you want.</p>
-
-	<h2>Cleaning up a bit</h2>
-	<p>Using short ids like <code>rAF</code> is useful when writing code, but it makes the panel look a bit awful. You can add captions for your counters when creating the rStats object:</p>
-	<pre><code>const rS = new rStats( {
-  values: {
-    frame: { caption: 'Total frame time (ms)' },
-    raf: { caption: 'Time since last rAF (ms)' },
-    fps: { caption: 'Framerate (FPS)' },
-    action1: { caption: 'Render action #1 (ms)' },
-    render: { caption: 'WebGL Render (ms)' }
-  }
-} );</code></pre>
-	<div class="example" id="example3"></div>
-	<p>But wait, we can do even better. We can add alarms to quickly identify potential problems in the values we're monitoring. You can set up an alarm (the graph and the caption turn red) when values go over or below a specified threshold:</p>
-	<pre><code>const rS = new rStats( {
-  values: {
-    frame: { caption: 'Total frame time (ms)', <b>over: 16</b> },
-    raf: { caption: 'Time since last rAF (ms)' },
-    fps: { caption: 'Framerate (FPS)', <b>below: 30</b> },
-    action1: { caption: 'Render action #1 (ms)' },
-    render: { caption: 'WebGL Render (ms)' }
-  }
-} );</code></pre>
-	<div class="example" id="example4">
-		<div class="side"><p>Make the frame take too long,<br>to see the alarms</p><button id="slow">Slow down</button></div>
-	</div>
-	<p>With these two changes, we get an alarm if the value <code>frame</code> is over 16ms, which means we're exceeding our frame budget and we're starting to drop frames. Similarly, we get an alarm if the value <code>FPS</code> is below 30, which would mean we're dropping so many frames we'll have a noticeably degraded experience. You can change this value to your acceptable framerate threshold :)</p>
-	<p><code>values</code> is an object with the ids for the counters and their properties. The ids are case-insensitive. You provide <code>caption</code>, <code>below</code> and <code>over</code>. You can also add <code>color</code> and <code>warningColor</code> to specify your preferred colours for each graph.</p>
-	<p>You can also tell the meter to show an averaged value over some time. Specify <code>average: true</code> to enable averaging of samples. Add <code>avgMs: 100</code> specifying the number of ms over which the value is averaged (default is 1000ms).</p>
-	<p>Even better, we can add grouping, so values are clustered in categories:</p>
-	<pre><code>const rS = new rStats( {
-  values: {
-    frame: { caption: 'Total frame time (ms)', over: 16 },
-    raf: { caption: 'Time since last rAF (ms)' },
-    fps: { caption: 'Framerate (FPS)', below: 30 },
-    action1: { caption: 'Render action #1 (ms)' },
-    render: { caption: 'WebGL Render (ms)' }
-  },
-  <b>groups: [
-    { caption: 'Framerate', values: [ 'fps', 'raf' ] },
-    { caption: 'Frame Budget', values: [ 'frame', 'action1', 'render' ] }
-  ]</b>
-} );</code></pre>
-	<div class="example" id="example5"></div>
-	<p>In this case, we group framerate-related values, and performance-related values. Clicking on the name of a group opens and closes that group.</p>
-
-	<h2>Let's extract some useful data from our values</h2>
-	<p>Since we're going to be measuring execution time for different processes that can be split in smaller actions, it might be interesting to see the percentage of the whole time that each step is taking.</p>
-	<pre><code>const rS = new rStats( {
-  values: {
-    frame: { caption: 'Total frame time (ms)', over: 16 },
-    raf: { caption: 'Time since last rAF (ms)' },
-    fps: { caption: 'Framerate (FPS)', below: 30 },
-    action1: { caption: 'Render action #1 (ms)' },
-    render: { caption: 'WebGL Render (ms)' }
-  },
-  groups: [
-    { caption: 'Framerate', values: [ 'fps', 'raf' ] },
-    { caption: 'Frame Budget', values: [ 'frame', 'action1', 'render' ] }
-  ],
-  <b>fractions: [
-    { base: 'frame', steps: [ 'action1', 'render' ] }
-  ]</b>
-} );</code></pre>
-	<div class="example" id="example6"></div>
-	<p>With this, we're telling rStats to add a stacked area chart: the value of the counter specified in <code>base</code> (in this case, <code>frame</code>) is the 100%, and the values for the counters in <code>steps</code> (<code>action1</code> and <code>render</code>) will be scaled to that base.</p>
-
-	<h2>Counting things that happen</h2>
-	<p>Not everything follows the update loop. To know how often something happens, like a collision in a physics engine or a message from a worker, call <code>mark()</code> every time it does. The counter shows how many per second, and falls to zero when it stops happening.</p>
-	<pre><code>const rS = new rStats( {
-  values: {
-    moves: { caption: 'Pointer moves / s' },
-    clicks: { caption: 'Clicks / s', <b>interpolate: false</b> }
-  }
-} );
-
-window.addEventListener( 'pointermove', function () {
-
-  rS( 'moves' ).<b>mark()</b>;
-
-} );</code></pre>
-	<div class="example" id="example8">
-		<div class="side"><p>Move the pointer, and click</p></div>
-	</div>
-	<p>The rate is calculated in <code>update()</code>, so keep calling it in your loop. With <code>interpolate: false</code> the counter shows what was counted in the last second, without scaling it.</p>
-
-	<h2>How do I add other counters and values?</h2>
-	<p>It's as easy as deciding what you want to measure and adding calls in your code. Wrap methods and statements between <code>start()</code> and <code>end()</code> to measure execution time. Use <code>set()</code> to store values and plot them.</p>
-	<p>Also, there's the possibility of adding plugins to your rStats object. There's one for three.js, one for WebGL and one for the memory of the browser. Check <a href="https://github.com/spite/rstats/blob/master/src/rStats.extras.js">rStats.extras.js</a> to get an idea of what they do.</p>
-	<p>Create your rStats object as usual, and add a <code>plugins</code> property:</p>
-	<pre><code>import { rStats } from 'rstatsjs';
-import { glStats, threeStats, BrowserStats } from 'rstatsjs/extras';
-
-const glS = new glStats(); <span class="c">// init at any point</span>
-const tS = new threeStats( renderer ); <span class="c">// init after the renderer is created</span>
-const bS = new BrowserStats();
-
-const rS = new rStats( {
-  values: {
-    frame: { caption: 'Total frame time (ms)', over: 16 },
-    fps: { caption: 'Framerate (FPS)', below: 30 },
-    raf: { caption: 'Time since last rAF (ms)' },
-    render: { caption: 'WebGL Render (ms)' }
-  },
-  groups: [
-    { caption: 'Framerate', values: [ 'fps', 'raf' ] },
-    { caption: 'Frame Budget', values: [ 'frame', 'render' ] }
-  ],
-  <b>plugins: [ tS, glS, bS ]</b>
-} );</code></pre>
-	<p>And update the render method. The three.js plugin is transparent, but the WebGL one needs the start of the frame to be signaled (it resets the counters).</p>
-	<pre><code>function render() {
-
-  rS( 'frame' ).start();
-  <b>glS.start();</b>
-
-  rS( 'rAF' ).tick();
-  rS( 'FPS' ).frame();
-
-  rS( 'render' ).start();
-  renderer.render( scene, camera );
-  rS( 'render' ).end();
-
-  rS( 'frame' ).end();
-  rS().update();
-
-  requestAnimationFrame( render );
-
-}</code></pre>
-	<div class="example" id="example7">
-		<div class="side"><canvas class="scene" id="scene"></canvas><button id="more">More spheres</button><button id="less">Fewer</button></div>
-	</div>
-	<p>The memory is read from <code>performance.memory</code>, which only Chrome has.</p>
-
-	<h2>The panel</h2>
-	<p>The panel is added to the top left of the page, over everything else. <code>rS().hide()</code> and <code>rS().show()</code> hide it and show it again, and <code>rS().destroy()</code> removes it. To have it somewhere else, like the examples in this page, pass the element where it should go as <code>parent</code>, and change its position from your CSS: the classes of the panel start with <code>rs-</code>.</p>
-	<p>Set <code>userTimingAPI: true</code> and everything measured with <code>start()/end()</code> is added to the User Timing API, so the counters show up in the Performance panel of the browser.</p>
-
-	<h2>Ok. Is that it?</h2>
-	<p>Yes, so far it is. See all of it working together in the <a href="scene.html">demo</a>, and get it from GitHub: <a href="https://github.com/spite/rstats">spite/rstats</a>. Ideas and suggestions go to <a href="https://github.com/spite/rstats/issues">the issues tracker</a>.</p>
-	<p class="note">Jaume Sanchez | <a href="https://www.clicktorelease.com">clicktorelease.com</a></p>
-
-</main>
 <script type="module">
 import * as THREE from 'three';
 import { rStats } from '../src/rStats.js';
 import { glStats, threeStats, BrowserStats } from '../src/rStats.extras.js';
 
-// keeps the page busy for a random time, as the work that the examples measure
-function delay( max = 3 ) {
+const container = document.getElementById( 'container' );
 
-	const end = performance.now() + Math.random() * max;
-	while ( performance.now() < end );
+let fov = 120, nfov = 70,
+	lon = 90, nlon = 110,
+	lat = 0, nlat = 17,
+	isUserInteracting = false,
+	onPointerDownPointerX, onPointerDownPointerY, onPointerDownLon, onPointerDownLat;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera( fov, window.innerWidth / window.innerHeight, 10, 1000 );
+camera.position.z = 100;
+scene.add( camera );
+
+const renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.setSize( window.innerWidth, window.innerHeight );
+container.appendChild( renderer.domElement );
+
+// a texture that is drawn again on every frame, to have something to measure
+const canvas = document.createElement( 'canvas' );
+canvas.width = 512;
+canvas.height = 512;
+const ctx = canvas.getContext( '2d' );
+const texture = new THREE.CanvasTexture( canvas );
+texture.colorSpace = THREE.SRGBColorSpace;
+const mat = new THREE.MeshBasicMaterial( { map: texture } );
+
+function r( d ) {
+
+	return ( .5 - Math.random() ) * d;
 
 }
 
-const examples = [];
+const num = 500;
+const g = new THREE.BoxGeometry( 1, 1, 1 );
+for ( let j = 0; j < num; j ++ ) {
 
-const observer = new IntersectionObserver( function ( entries ) {
+	const m = new THREE.Mesh( g, mat );
+	m.position.set( r( 100 ), r( 100 ), r( 100 ) );
+	m.rotation.set( r( 2 * Math.PI ), r( 2 * Math.PI ), r( 2 * Math.PI ) );
+	m.scale.set( 1 + r( 1 ), 1 + r( 1 ), 1 + r( 1 ) );
+	scene.add( m );
 
-	for ( const entry of entries ) examples.find( e => e.element === entry.target ).visible = entry.isIntersecting;
+}
+
+const positions = [];
+for ( let j = 0; j < num; j ++ ) positions.push( r( 100 ), r( 100 ), r( 100 ) );
+
+const geometry = new THREE.BufferGeometry();
+geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+
+const sprite = new THREE.TextureLoader().load( 'disc.png' );
+sprite.colorSpace = THREE.SRGBColorSpace;
+const material = new THREE.PointsMaterial( { size: 3, sizeAttenuation: true, map: sprite, transparent: true, depthWrite: false } );
+material.color.setHSL( 1.0, 0.3, 0.7 );
+scene.add( new THREE.Points( geometry, material ) );
+
+const bS = new BrowserStats();
+const glS = new glStats();
+const tS = new threeStats( renderer );
+
+const rS = new rStats( {
+	css: [ 'https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700,300' ],
+	userTimingAPI: true,
+	values: {
+		frame: { caption: 'Total frame time (ms)', over: 16, average: true, avgMs: 100 },
+		fps: { caption: 'Framerate (FPS)', below: 30 },
+		raf: { caption: 'Time since rAF (ms)', average: true, avgMs: 100 },
+		moves: { caption: 'Pointer moves / s' },
+		rstats: { caption: 'rStats update (ms)', average: true, avgMs: 100 },
+		texture: { caption: 'GenTex', average: true, avgMs: 100 },
+		setup: { caption: 'Setup', average: true, avgMs: 100 },
+		render: { caption: 'Render', average: true, avgMs: 100 }
+	},
+	groups: [
+		{ caption: 'Framerate', values: [ 'fps', 'raf' ] },
+		{ caption: 'Input', values: [ 'moves' ] },
+		{ caption: 'Frame Budget', values: [ 'frame', 'texture', 'setup', 'render' ] }
+	],
+	fractions: [
+		{ base: 'frame', steps: [ 'texture', 'setup', 'render' ] }
+	],
+	plugins: [
+		bS,
+		tS,
+		glS
+	]
+} );
+
+function onWindowResize() {
+
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	camera.aspect = window.innerWidth / window.innerHeight;
+
+}
+
+container.addEventListener( 'pointerdown', function ( event ) {
+
+	if ( ! event.isPrimary ) return;
+
+	event.preventDefault();
+	container.setPointerCapture( event.pointerId );
+	isUserInteracting = true;
+	onPointerDownPointerX = event.clientX;
+	onPointerDownPointerY = event.clientY;
+	onPointerDownLon = lon;
+	onPointerDownLat = lat;
 
 } );
 
-// an rStats in an element of the page, that only runs while it is on screen
-function example( id, settings, step ) {
+container.addEventListener( 'pointermove', function ( event ) {
 
-	const element = document.getElementById( id );
-	const rS = new rStats( Object.assign( { parent: element }, settings ) );
+	if ( ! isUserInteracting || ! event.isPrimary ) return;
 
-	// the panel goes before what the example already has
-	element.insertBefore( rS().element, element.firstChild );
+	nlon = ( event.clientX - onPointerDownPointerX ) * 0.1 + onPointerDownLon;
+	nlat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
 
-	examples.push( { element, rS, step, visible: false } );
-	observer.observe( element );
+} );
 
-	return rS;
+function onPointerUp() {
+
+	isUserInteracting = false;
 
 }
 
-function measure( rS, work = 3 ) {
+container.addEventListener( 'pointerup', onPointerUp );
+container.addEventListener( 'pointercancel', onPointerUp );
+container.style.touchAction = 'none';
+
+container.addEventListener( 'wheel', function ( event ) {
+
+	event.preventDefault();
+	nfov += event.deltaY * 0.02;
+
+}, { passive: false } );
+
+let hidden = false;
+window.addEventListener( 'keydown', function ( event ) {
+
+	if ( event.key !== 'h' && event.key !== 'H' ) return;
+
+	hidden = ! hidden;
+	if ( hidden ) rS().hide(); else rS().show();
+
+} );
+
+// counts the events of the pointer, wherever it is. The first call creates the counter
+rS( 'moves' ).mark( 0 );
+
+window.addEventListener( 'pointermove', function () {
+
+	rS( 'moves' ).mark();
+
+} );
+
+window.addEventListener( 'resize', onWindowResize );
+onWindowResize();
+
+function render() {
 
 	rS( 'frame' ).start();
+	glS.start();
+
 	rS( 'rAF' ).tick();
 	rS( 'FPS' ).frame();
 
-	rS( 'action1' ).start();
-	delay( work );
-	rS( 'action1' ).end();
+	rS( 'texture' ).start();
+	for ( let j = 0; j < 10; j ++ ) {
 
-	rS( 'render' ).start();
-	delay( work );
-	rS( 'render' ).end();
-
-	rS( 'frame' ).end();
-	rS().update();
-
-}
-
-const captions = {
-	frame: { caption: 'Total frame time (ms)' },
-	raf: { caption: 'Time since last rAF (ms)' },
-	fps: { caption: 'Framerate (FPS)' },
-	action1: { caption: 'Render action #1 (ms)' },
-	render: { caption: 'WebGL Render (ms)' }
-};
-
-const alarms = Object.assign( {}, captions, {
-	frame: { caption: 'Total frame time (ms)', over: 16 },
-	fps: { caption: 'Framerate (FPS)', below: 30 }
-} );
-
-const groups = [
-	{ caption: 'Framerate', values: [ 'fps', 'raf' ] },
-	{ caption: 'Frame Budget', values: [ 'frame', 'action1', 'render' ] }
-];
-
-example( 'example1', {}, function ( rS ) {
-
-	rS( 'frame' ).start();
-	rS( 'frame' ).end();
-	rS().update();
-
-} );
-
-example( 'example2', {}, rS => measure( rS ) );
-example( 'example3', { values: captions }, rS => measure( rS ) );
-
-let slow = false;
-const slowButton = document.getElementById( 'slow' );
-slowButton.addEventListener( 'click', function () {
-
-	slow = ! slow;
-	slowButton.classList.toggle( 'on', slow );
-	slowButton.textContent = slow ? 'Back to normal' : 'Slow down';
-
-} );
-
-example( 'example4', { values: alarms }, rS => measure( rS, slow ? 30 : 3 ) );
-example( 'example5', { values: alarms, groups }, rS => measure( rS ) );
-example( 'example6', { values: alarms, groups, fractions: [ { base: 'frame', steps: [ 'action1', 'render' ] } ] }, rS => measure( rS ) );
-
-{
-
-	const rS = example( 'example8', { values: { moves: { caption: 'Pointer moves / s' }, clicks: { caption: 'Clicks / s', interpolate: false } } }, rS => rS().update() );
-
-	rS( 'moves' ).mark( 0 );
-	rS( 'clicks' ).mark( 0 );
-
-	window.addEventListener( 'pointermove', () => rS( 'moves' ).mark() );
-	window.addEventListener( 'pointerdown', () => rS( 'clicks' ).mark() );
-
-}
-
-{
-
-	const canvas = document.getElementById( 'scene' );
-	const renderer = new THREE.WebGLRenderer( { canvas, antialias: true } );
-	renderer.setPixelRatio( window.devicePixelRatio );
-
-	const scene = new THREE.Scene();
-	const camera = new THREE.PerspectiveCamera( 70, 1, 1, 1000 );
-	camera.position.z = 30;
-
-	const geometry = new THREE.IcosahedronGeometry( 10, 3 );
-	const material = new THREE.MeshNormalMaterial();
-	const spheres = new THREE.Group();
-	scene.add( spheres );
-
-	function setSpheres( count ) {
-
-		while ( spheres.children.length > count ) spheres.remove( spheres.children[ spheres.children.length - 1 ] );
-
-		while ( spheres.children.length < count ) {
-
-			const sphere = new THREE.Mesh( geometry, material );
-			const n = spheres.children.length;
-
-			// the first one in the centre, the rest around it
-			if ( n > 0 ) {
-
-				sphere.scale.setScalar( .2 + .3 * Math.random() );
-				sphere.position.set( Math.cos( n ), Math.sin( n * 1.7 ), Math.sin( n ) ).multiplyScalar( 14 + 6 * Math.random() );
-
-			}
-
-			spheres.add( sphere );
-
-		}
+		ctx.fillStyle = '#' + Math.floor( Math.random() * 16777215 ).toString( 16 ).padStart( 6, '0' );
+		const x = Math.random() * canvas.width,
+			y = Math.random() * canvas.height,
+			w = Math.random() * canvas.width,
+			h = Math.random() * canvas.height;
+		ctx.fillRect( x, y, w, h );
 
 	}
 
-	setSpheres( 1 );
+	texture.needsUpdate = true;
+	rS( 'texture' ).end();
 
-	document.getElementById( 'more' ).addEventListener( 'click', () => setSpheres( spheres.children.length * 2 + 8 ) );
-	document.getElementById( 'less' ).addEventListener( 'click', () => setSpheres( Math.max( 1, Math.floor( ( spheres.children.length - 8 ) / 2 ) ) ) );
+	rS( 'setup' ).start();
+	nfov = Math.max( 1, Math.min( 150, nfov ) );
 
-	const glS = new glStats();
-	const tS = new threeStats( renderer );
-	const bS = new BrowserStats();
+	lon += ( nlon - lon ) * .2;
+	lat += ( nlat - lat ) * .2;
+	fov += ( nfov - fov ) * .2;
+	camera.fov = fov;
+	camera.updateProjectionMatrix();
 
-	example( 'example7', {
-		values: {
-			frame: { caption: 'Total frame time (ms)', over: 16 },
-			fps: { caption: 'Framerate (FPS)', below: 30 },
-			raf: { caption: 'Time since last rAF (ms)' },
-			render: { caption: 'WebGL Render (ms)' }
-		},
-		groups: [
-			{ caption: 'Framerate', values: [ 'fps', 'raf' ] },
-			{ caption: 'Frame Budget', values: [ 'frame', 'render' ] }
-		],
-		plugins: [ tS, glS, bS ]
-	}, function ( rS ) {
+	lat = Math.max( - 85, Math.min( 85, lat ) );
+	const phi = ( 90 - lat ) * Math.PI / 180;
+	const theta = lon * Math.PI / 180;
 
-		rS( 'frame' ).start();
-		glS.start();
+	camera.position.x = 100 * Math.sin( phi ) * Math.cos( theta );
+	camera.position.y = 100 * Math.cos( phi );
+	camera.position.z = 100 * Math.sin( phi ) * Math.sin( theta );
+	camera.lookAt( scene.position );
+	rS( 'setup' ).end();
 
-		rS( 'rAF' ).tick();
-		rS( 'FPS' ).frame();
+	rS( 'render' ).start();
+	renderer.render( scene, camera );
+	rS( 'render' ).end();
 
-		const w = canvas.clientWidth, h = canvas.clientHeight;
+	rS( 'frame' ).end();
 
-		if ( canvas.width !== Math.floor( w * renderer.getPixelRatio() ) || canvas.height !== Math.floor( h * renderer.getPixelRatio() ) ) {
+	rS( 'rStats' ).start();
+	rS().update();
+	rS( 'rStats' ).end();
 
-			renderer.setSize( w, h, false );
-			camera.aspect = w / h;
-			camera.updateProjectionMatrix();
-
-		}
-
-		spheres.rotation.y += .005;
-
-		rS( 'render' ).start();
-		renderer.render( scene, camera );
-		rS( 'render' ).end();
-
-		rS( 'frame' ).end();
-		rS().update();
-
-	} );
+	requestAnimationFrame( render );
 
 }
 
-function loop() {
-
-	requestAnimationFrame( loop );
-
-	for ( const e of examples ) if ( e.visible ) e.step( e.rS );
-
-}
-
-loop();
+render();
 </script>
-</body>
+
+	</body>
 </html>
