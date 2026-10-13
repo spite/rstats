@@ -220,13 +220,13 @@ The classes of the panel start with ```rs-```, to change how it looks from your 
 
 # Credits
 
-It takes after [mrdoob stats.js](https://github.com/mrdoob/stats.js/), [Jerome Etienne's threex.rendererstats](https://github.com/jeromeetienne/threex.rendererstats) and [Ben Vanik's WebGL Inspector](http://benvanik.github.io/WebGL-Inspector/).
+It takes after [mrdoob stats.js](https://github.com/mrdoob/stats.js/), [Jerome Etienne's threex.rendererstats](https://github.com/jeromeetienne/threex.rendererstats) and [Ben Vanik's WebGL Inspector](https://benvanik.github.io/WebGL-Inspector/).
 
-Jaume Sanchez Elias [@thespite](http://www.twitter.com/thespite)  
-[www.clicktorelease.com](http://www.clicktorelease.com)
+Jaume Sanchez Elias [@thespite](https://twitter.com/thespite)  
+[www.clicktorelease.com](https://www.clicktorelease.com)
 
 #### License ####
 
 MIT licensed
 
-Copyright (C) 2014 Jaume Sanchez Elias, http://www.clicktorelease.com
+Copyright (C) 2014 Jaume Sanchez Elias, https://www.clicktorelease.com
